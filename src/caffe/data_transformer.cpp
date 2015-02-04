@@ -26,6 +26,24 @@ void DataTransformer<Dtype>::Transform(const int batch_item_id,
                << "set at the same time.";
   }
 
+  // Bias value for color jittering
+  if (phase_ == Caffe::TRAIN) {
+    caffe_rng_gaussian(3, (Dtype)0., (Dtype)0.1, bias_rand_);
+    bias_val_[0] = bias_pca_[0][0] * bias_rand_[0] + 
+      bias_pca_[1][0] * bias_rand_[1] +
+      bias_pca_[2][0] * bias_rand_[2];
+    bias_val_[1] = bias_pca_[0][1] * bias_rand_[0] + 
+      bias_pca_[1][1] * bias_rand_[1] +
+      bias_pca_[2][1] * bias_rand_[2];
+    bias_val_[2] = bias_pca_[0][2] * bias_rand_[0] + 
+      bias_pca_[1][2] * bias_rand_[1] +
+      bias_pca_[2][2] * bias_rand_[2];
+  } else {
+    bias_val_[0] = (Dtype)0.;
+    bias_val_[1] = (Dtype)0.;
+    bias_val_[2] = (Dtype)0.;
+  }
+
   if (crop_size) {
     CHECK(data.size()) << "Image cropping only support uint8 data";
     int h_off, w_off;
@@ -48,7 +66,7 @@ void DataTransformer<Dtype>::Transform(const int batch_item_id,
             Dtype datum_element =
                 static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
             transformed_data[top_index] =
-                (datum_element - mean[data_index]) * scale;
+                (datum_element - mean[data_index] + bias_val_[c]) * scale;
           }
         }
       }
@@ -63,7 +81,7 @@ void DataTransformer<Dtype>::Transform(const int batch_item_id,
             Dtype datum_element =
                 static_cast<Dtype>(static_cast<uint8_t>(data[data_index]));
             transformed_data[top_index] =
-                (datum_element - mean[data_index]) * scale;
+                (datum_element - mean[data_index] + bias_val_[c]) * scale;
           }
         }
       }
@@ -74,13 +92,15 @@ void DataTransformer<Dtype>::Transform(const int batch_item_id,
       for (int j = 0; j < size; ++j) {
         Dtype datum_element =
             static_cast<Dtype>(static_cast<uint8_t>(data[j]));
+        int c = j / (height * width);
         transformed_data[j + batch_item_id * size] =
-            (datum_element - mean[j]) * scale;
+            (datum_element - mean[j] + bias_val_[c]) * scale;
       }
     } else {
       for (int j = 0; j < size; ++j) {
+        int c = j / (height * width);
         transformed_data[j + batch_item_id * size] =
-            (datum.float_data(j) - mean[j]) * scale;
+            (datum.float_data(j) - mean[j] + bias_val_[c]) * scale;
       }
     }
   }
@@ -96,6 +116,7 @@ void DataTransformer<Dtype>::InitRand() {
   } else {
     rng_.reset();
   }
+  InitBias();
 }
 
 template <typename Dtype>
@@ -106,6 +127,18 @@ unsigned int DataTransformer<Dtype>::Rand() {
   return (*rng)();
 }
 
-INSTANTIATE_CLASS(DataTransformer);
+template <typename Dtype>
+void DataTransformer<Dtype>::InitBias() {
+  bias_pca_[0][0] = (Dtype)66.3793;
+  bias_pca_[0][1] = (Dtype)68.0404;
+  bias_pca_[0][2] = (Dtype)67.8507;
+  bias_pca_[1][0] = (Dtype)24.8792;
+  bias_pca_[1][1] = (Dtype)-0.2223;
+  bias_pca_[1][2] = (Dtype)-24.1168;
+  bias_pca_[2][0] = (Dtype)-7.1852;
+  bias_pca_[2][1] = (Dtype)14.5351;
+  bias_pca_[2][2] = (Dtype)-7.5464;
+}
 
+INSTANTIATE_CLASS(DataTransformer);
 }  // namespace caffe

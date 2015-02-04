@@ -16,10 +16,15 @@ class DataTransformer {
   explicit DataTransformer(const TransformationParameter& param)
     : param_(param) {
     phase_ = Caffe::phase();
+    InitBias();
+  }
+  explicit DataTransformer() {
+    phase_ = Caffe::phase();
+    InitBias();
   }
   virtual ~DataTransformer() {}
-
   void InitRand();
+  void InitBias();
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -44,9 +49,13 @@ class DataTransformer {
   // Tranformation parameters
   TransformationParameter param_;
 
-
   shared_ptr<Caffe::RNG> rng_;
   Caffe::Phase phase_;
+
+  // Data for image jittering
+  Dtype bias_pca_[3][3];
+  Dtype bias_rand_[3];
+  Dtype bias_val_[3];
 };
 
 }  // namespace caffe
