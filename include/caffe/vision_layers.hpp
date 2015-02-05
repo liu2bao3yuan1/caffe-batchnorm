@@ -140,6 +140,7 @@ class ConvolutionSparseLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   void UpdatePtrs();
+  void UpdatePCA();
 
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;

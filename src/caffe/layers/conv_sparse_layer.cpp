@@ -5,6 +5,7 @@
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
+#include <opencv2/opencv.hpp>
 
 namespace caffe {
 
@@ -263,7 +264,6 @@ void ConvolutionSparseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   */
 }
 
-
 template <typename Dtype>
 void ConvolutionSparseLayer<Dtype>::CopyFromConvLayer(const LayerParameter& conv_layer) {
   LOG(INFO) << "ConvolutionSparseLayer<Dtype>::CopyFromConvLayer";
@@ -296,7 +296,90 @@ void ConvolutionSparseLayer<Dtype>::CopyFromConvLayer(const LayerParameter& conv
     }
   }
 
-  // UpdatePCA();
+  UpdatePCA();
+}
+
+template <typename Dtype>
+void ConvolutionSparseLayer<Dtype>::UpdatePCA() {
+  LOG(INFO) << "ConvolutionSparseLayer<Dtype>::UpdatePCA()";
+
+  cv::Mat A, A_s, covar, mean, eigvec;
+  vector<double> eigval;
+  double *p_A;
+
+  // PCA over channels
+  if (this->layer_param_.convolution_param().is_pca_channel()) {
+  // if (false)
+    A.create(num_output_ * kernel_h_ * kernel_w_ / group_, channels_ / group_, CV_64FC1);
+    eigvec.create(channels_ / group_, channels_ / group_, CV_64FC1);
+    Dtype* w0_data = this->blobs_[0]->mutable_cpu_data();
+    Dtype* w2_data = this->blobs_[2]->mutable_cpu_data();
+    for (int g = 0; g < group_; ++g) {
+      for (int c = 0; c < channels_ / group_; ++c) {
+        for (int y = 0; y < num_output_ / group_; ++y) {
+          for (int x = 0; x < kernel_h_ * kernel_w_; ++x) {
+            A.at<double>(x + y * kernel_h_ * kernel_w_, c) = (double)w2_data[x + kernel_h_ * kernel_w_ * (c + channels_ / group_ * (y + num_output_ / group_ * g))] ;
+          }
+        }
+      }
+      for (int y = 0; y < channels_ / group_; ++y) {
+        for (int x = 0; x < channels_ / group_; ++x) {
+          eigvec.at<double>(y,x) = (double)w0_data[x + channels_ / group_ * (y + g * channels_ / group_)];
+        }
+      }
+      A = A * eigvec;
+      calcCovarMatrix(A, covar, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS, CV_64F);
+      eigen(covar, eigval, eigvec);
+      A = A * eigvec.t();
+      for (int c = 0; c < channels_ / group_; ++c) {
+        for (int y = 0; y < num_output_ / group_; ++y) {
+          for (int x = 0; x < kernel_h_ * kernel_w_; ++x) {
+            w2_data[x + kernel_h_ * kernel_w_ * (c + channels_ / group_ * (y + num_output_ / group_ * g))] = (Dtype)A.at<double>(x + y * kernel_h_ * kernel_w_, c);
+          }
+        }
+      }
+      for (int y = 0; y < channels_ / group_; ++y) {
+        for (int x = 0; x < channels_ / group_; ++x) {
+          w0_data[x + channels_ / group_ * (y + g * channels_ / group_)] = (Dtype)eigvec.at<double>(y,x);
+        }
+      }
+    }
+  }
+
+  // PCA over filters
+  A.create(num_output_ / group_, kernel_h_ * kernel_w_, CV_64FC1);
+  eigvec.create(kernel_h_ * kernel_w_, kernel_h_ * kernel_w_, CV_64FC1);
+  Dtype* w1_data = this->blobs_[1]->mutable_cpu_data();
+  Dtype* w2_data = this->blobs_[2]->mutable_cpu_data();
+  p_A = (double*)A.data; 
+  for (int g = 0; g < group_; ++g) {
+    for (int c = 0; c < channels_ / group_; ++c) {
+      for (int y = 0; y < num_output_ / group_; ++y) {
+        for (int x = 0; x < kernel_h_ * kernel_w_; ++x) {
+          A.at<double>(y,x) = (double)w2_data[x + kernel_h_ * kernel_w_ * (c + channels_ / group_ * (y + num_output_ / group_ * g))];
+        }
+      }
+      for (int y = 0; y < kernel_h_ * kernel_w_; ++y) {
+        for (int x = 0; x < kernel_h_ * kernel_w_; ++x) {
+          eigvec.at<double>(y,x) = (double)w1_data[x + kernel_h_ * kernel_w_ * (y + kernel_h_ * kernel_w_ * (c + channels_ / group_ * g))];
+        }
+      }
+      A = A * eigvec;
+      calcCovarMatrix(A, covar, mean, CV_COVAR_NORMAL | CV_COVAR_ROWS, CV_64F);
+      eigen(covar, eigval, eigvec);
+      A = A * eigvec.t();
+      for (int y = 0; y < num_output_ / group_; ++y) {
+        for (int x = 0; x < kernel_h_ * kernel_w_; ++x) {
+          w2_data[x + kernel_h_ * kernel_w_ * (c + channels_ / group_ * (y + num_output_ / group_ * g))] = (Dtype)A.at<double>(y,x);
+        }
+      }
+      for (int y = 0; y < kernel_h_ * kernel_w_; ++y) {
+        for (int x = 0; x < kernel_h_ * kernel_w_; ++x) {
+          w1_data[x + kernel_h_ * kernel_w_ * (y + kernel_h_ * kernel_w_ * (c + channels_ / group_ * g))] = (Dtype)eigvec.at<double>(y,x);
+        }
+      }
+    }
+  } 
 }
 
 template <typename Dtype>
@@ -317,20 +400,20 @@ void ConvolutionSparseLayer<Dtype>::UpdatePtrs() {
   Dtype** c1_diff_ptrs_cpu = new Dtype*[channels_];
 
   for(int i=0; i<channels_; i++) {
-    col_data_ptrs_cpu[i] = col_data + kernel_h_*kernel_w_*N_*i;
-    col_diff_ptrs_cpu[i] = col_diff + kernel_h_*kernel_w_*N_*i;
-    w1_data_ptrs_cpu[i] = w1_data + i*kernel_h_*kernel_w_*kernel_h_*kernel_w_;
-    w1_diff_ptrs_cpu[i] = w1_diff + i*kernel_h_*kernel_w_*kernel_h_*kernel_w_;
-    c1_data_ptrs_cpu[i] = c1_data + kernel_h_*kernel_w_*N_*i;
-    c1_diff_ptrs_cpu[i] = c1_diff + kernel_h_*kernel_w_*N_*i;
+    col_data_ptrs_cpu[i] = col_data + kernel_h_ * kernel_w_ * N_ * i;
+    col_diff_ptrs_cpu[i] = col_diff + kernel_h_ * kernel_w_ * N_*i;
+    w1_data_ptrs_cpu[i] = w1_data + i * kernel_h_ * kernel_w_ * kernel_h_ * kernel_w_;
+    w1_diff_ptrs_cpu[i] = w1_diff + i * kernel_h_ * kernel_w_ * kernel_h_ * kernel_w_;
+    c1_data_ptrs_cpu[i] = c1_data + kernel_h_ * kernel_w_ * N_ * i;
+    c1_diff_ptrs_cpu[i] = c1_diff + kernel_h_ * kernel_w_ * N_ * i;
   }
 
-  cudaMemcpy(col_data_ptrs_gpu, col_data_ptrs_cpu,channels_*sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(col_diff_ptrs_gpu, col_diff_ptrs_cpu,channels_*sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(w1_data_ptrs_gpu, w1_data_ptrs_cpu,channels_*sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(w1_diff_ptrs_gpu, w1_diff_ptrs_cpu,channels_*sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(c1_data_ptrs_gpu, c1_data_ptrs_cpu,channels_*sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(c1_diff_ptrs_gpu, c1_diff_ptrs_cpu,channels_*sizeof(Dtype*), cudaMemcpyHostToDevice);
+  cudaMemcpy(col_data_ptrs_gpu, col_data_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
+  cudaMemcpy(col_diff_ptrs_gpu, col_diff_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
+  cudaMemcpy(w1_data_ptrs_gpu, w1_data_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
+  cudaMemcpy(w1_diff_ptrs_gpu, w1_diff_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
+  cudaMemcpy(c1_data_ptrs_gpu, c1_data_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
+  cudaMemcpy(c1_diff_ptrs_gpu, c1_diff_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
 
   delete[] col_data_ptrs_cpu;
   delete[] col_diff_ptrs_cpu;
