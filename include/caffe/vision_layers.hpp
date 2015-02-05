@@ -128,6 +128,8 @@ class ConvolutionSparseLayer : public Layer<Dtype> {
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline bool EqualNumBottomTopBlobs() const { return true; }
 
+  void CopyFromConvLayer(const LayerParameter&);
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);

@@ -263,6 +263,42 @@ void ConvolutionSparseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   */
 }
 
+
+template <typename Dtype>
+void ConvolutionSparseLayer<Dtype>::CopyFromConvLayer(const LayerParameter& conv_layer) {
+  LOG(INFO) << "ConvolutionSparseLayer<Dtype>::CopyFromConvLayer";
+  CHECK_EQ(this->blobs_[2]->num(), conv_layer.blobs(0).num());
+  CHECK_EQ(this->blobs_[2]->channels(), conv_layer.blobs(0).channels());
+  CHECK_EQ(this->blobs_[2]->height(), conv_layer.blobs(0).height());
+  CHECK_EQ(this->blobs_[2]->width(), conv_layer.blobs(0).width());
+  this->blobs_[2]->FromProto(conv_layer.blobs(0));
+  if (bias_term_) {
+    CHECK_EQ(this->blobs_[3]->num(), conv_layer.blobs(1).num());
+    CHECK_EQ(this->blobs_[3]->channels(), conv_layer.blobs(1).channels());
+    CHECK_EQ(this->blobs_[3]->height(), conv_layer.blobs(1).height());
+    CHECK_EQ(this->blobs_[3]->width(), conv_layer.blobs(1).width());
+    this->blobs_[3]->FromProto(conv_layer.blobs(1));
+  }
+
+  // Initialize w0 and w2 to identity matrices
+  Dtype* w0_data = this->blobs_[0]->mutable_cpu_data();
+  caffe_set(this->blobs_[0]->count(), Dtype(0), w0_data);
+  for (int g = 0; g < group_; ++g) {
+    for (int x = 0; x < channels_ / group_; ++x) {
+      w0_data[g * channels_ * channels_ / group_ / group_ + x * channels_ / group_ + x] = (Dtype)1.;
+    }
+  }
+  Dtype* w1_data = this->blobs_[1]->mutable_cpu_data();
+  caffe_set(this->blobs_[1]->count(), Dtype(0), w1_data);
+  for (int c = 0; c < channels_; ++c) {
+    for(int x = 0; x < kernel_h_ * kernel_w_; ++x) {
+      w1_data[x + kernel_h_ * kernel_w_ * (x + kernel_h_ * kernel_w_ * c)] = (Dtype)1.;
+    }
+  }
+
+  // UpdatePCA();
+}
+
 template <typename Dtype>
 void ConvolutionSparseLayer<Dtype>::UpdatePtrs() {
   Dtype* col_data = col_buffer_.mutable_gpu_data();
