@@ -111,6 +111,70 @@ class ConvolutionLayer : public Layer<Dtype> {
   Blob<Dtype> bias_multiplier_;
 };
 
+template <typename Dtype>
+class ConvolutionSparseLayer : public Layer<Dtype> {
+ public:
+  explicit ConvolutionSparseLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_CONVOLUTION;
+  }
+  virtual inline int MinBottomBlobs() const { return 1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline bool EqualNumBottomTopBlobs() const { return true; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  void UpdatePtrs();
+
+  int kernel_h_, kernel_w_;
+  int stride_h_, stride_w_;
+  int num_;
+  int channels_;
+  int pad_h_, pad_w_;
+  int height_, width_;
+  int group_;
+  int num_output_;
+  int height_out_, width_out_;
+  bool bias_term_;
+
+  /// M_ is the channel dimension of the output for a single group, which is the
+  /// leading dimension of the filter matrix.
+  int M_;
+  /// K_ is the dimension of an unrolled input for a single group, which is the
+  /// leading dimension of the data matrix.
+  int K_;
+  /// N_ is the spatial dimension of the output, the H x W, which are the last
+  /// dimensions of the data and filter matrices.
+  int N_;
+  Blob<Dtype> col_buffer_;
+  Blob<Dtype> c0_buffer_;
+  Blob<Dtype> c1_buffer_;
+  Blob<Dtype> bias_multiplier_;
+
+  // gpu pointers for gemm_batch
+  Dtype** col_data_ptrs_gpu;
+  Dtype** col_diff_ptrs_gpu;
+  Dtype** w1_data_ptrs_gpu;
+  Dtype** w1_diff_ptrs_gpu;
+  Dtype** c1_data_ptrs_gpu;
+  Dtype** c1_diff_ptrs_gpu;
+
+};
+
+
 #ifdef USE_CUDNN
 /*
  * @brief cuDNN implementation of ConvolutionLayer.
