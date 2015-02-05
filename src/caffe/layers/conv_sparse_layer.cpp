@@ -152,6 +152,8 @@ void ConvolutionSparseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ConvolutionSparseLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
+  LOG(INFO) << "ConvolutionSparseLayer::Forward_cpu(): Not Implemented!";
+  /*
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = (*top)[i]->mutable_cpu_data();
@@ -181,11 +183,14 @@ void ConvolutionSparseLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
       }
     }
   }
+  */
 }
 
 template <typename Dtype>
 void ConvolutionSparseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom) {
+  LOG(INFO) << "ConvolutionSparseLayer::Backward_cpu(): Not Implemented!";
+  /*
   const Dtype* weight = NULL;
   Dtype* weight_diff = NULL;
   if (this->param_propagate_down_[0]) {
@@ -255,6 +260,7 @@ void ConvolutionSparseLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
       }
     }
   }
+  */
 }
 
 template <typename Dtype>
