@@ -8,7 +8,7 @@ layers {
     # source: "examples/imagenet/ilsvrc12_train_lmdb"
     source: "/media/BACKUP/DATA/ILSVRC/2012/lmdb/ilsvrc12_train_lmdb"
     backend: LMDB
-    batch_size: 256
+    batch_size: 64
   }
   transform_param {
     crop_size: 227

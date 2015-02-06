@@ -122,7 +122,7 @@ void ConvolutionSparseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top
           width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_, col_data);
       // multiply with w1, save to c1 
       caffe_gpu_gemm_batch<Dtype>(CblasNoTrans, CblasNoTrans,
-          kernel_h_ * kernel_w_ * kernel_h_ * kernel_w_, N_, kernel_h_ * kernel_w_ * kernel_h_ * kernel_w_,
+          kernel_h_ * kernel_w_, N_, kernel_h_ * kernel_w_,
           (Dtype)1., (const Dtype**)w1_data_ptrs_gpu, (const Dtype**)col_data_ptrs_gpu,
           (Dtype)0., c1_data_ptrs_gpu, channels_);
       for (int g = 0; g < group_; ++g) {
@@ -159,12 +159,12 @@ void ConvolutionSparseLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top
       }
       // w1_diff
       caffe_gpu_gemm_batch<Dtype>(CblasNoTrans, CblasTrans, 
-          kernel_h_ * kernel_h_ * kernel_w_ * kernel_w_, kernel_h_ * kernel_h_ * kernel_w_ * kernel_w_, N_,
+          kernel_h_ * kernel_w_, kernel_h_ * kernel_w_, N_,
           (Dtype)1., (const Dtype**)c1_diff_ptrs_gpu, (const Dtype**)col_data_ptrs_gpu, 
           (Dtype)1., w1_diff_ptrs_gpu, channels_);
       // col_diff
       caffe_gpu_gemm_batch<Dtype>(CblasTrans, CblasNoTrans, 
-          kernel_h_ * kernel_h_ * kernel_w_ * kernel_w_, N_, kernel_h_ * kernel_h_ * kernel_w_ * kernel_w_,
+          kernel_h_ * kernel_w_, N_, kernel_h_ * kernel_w_,
           (Dtype)1., (const Dtype**)w1_data_ptrs_gpu, (const Dtype**)c1_diff_ptrs_gpu,
           (Dtype)0., col_diff_ptrs_gpu, channels_);
       // c0_diff
