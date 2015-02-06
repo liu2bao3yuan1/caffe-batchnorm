@@ -37,11 +37,15 @@ layers {
 }
 layers {
   name: "conv1"
-  type: CONVOLUTION
+  type: CONVOLUTIONSPARSE
   bottom: "data"
   top: "conv1"
   blobs_lr: 1
+  blobs_lr: 1
+  blobs_lr: 1
   blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 1
   weight_decay: 1
   weight_decay: 0
   convolution_param {
@@ -88,11 +92,15 @@ layers {
 }
 layers {
   name: "conv2"
-  type: CONVOLUTION
+  type: CONVOLUTIONSPARSE
   bottom: "norm1"
   top: "conv2"
   blobs_lr: 1
+  blobs_lr: 1
+  blobs_lr: 1
   blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 1
   weight_decay: 1
   weight_decay: 0
   convolution_param {
@@ -140,11 +148,15 @@ layers {
 }
 layers {
   name: "conv3"
-  type: CONVOLUTION
+  type: CONVOLUTIONSPARSE
   bottom: "norm2"
   top: "conv3"
   blobs_lr: 1
+  blobs_lr: 1
+  blobs_lr: 1
   blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 1
   weight_decay: 1
   weight_decay: 0
   convolution_param {
@@ -169,11 +181,15 @@ layers {
 }
 layers {
   name: "conv4"
-  type: CONVOLUTION
+  type: CONVOLUTIONSPARSE
   bottom: "conv3"
   top: "conv4"
   blobs_lr: 1
+  blobs_lr: 1
+  blobs_lr: 1
   blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 1
   weight_decay: 1
   weight_decay: 0
   convolution_param {
@@ -199,11 +215,15 @@ layers {
 }
 layers {
   name: "conv5"
-  type: CONVOLUTION
+  type: CONVOLUTIONSPARSE
   bottom: "conv4"
   top: "conv5"
   blobs_lr: 1
+  blobs_lr: 1
+  blobs_lr: 1
   blobs_lr: 2
+  weight_decay: 1
+  weight_decay: 1
   weight_decay: 1
   weight_decay: 0
   convolution_param {

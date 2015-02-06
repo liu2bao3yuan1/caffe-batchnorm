@@ -13,6 +13,7 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+#include "caffe/vision_layers.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 
@@ -703,8 +704,15 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       continue;
     }
     DLOG(INFO) << "Copying source layer " << source_layer_name;
+    // conv_sparse layer
+    if (layers_[target_layer_id]->layer_param().type() == LayerParameter_LayerType_CONVOLUTIONSPARSE && source_layer.type() == LayerParameter_LayerType_CONVOLUTION) {
+      // Nasty pointer conversion here
+      ConvolutionSparseLayer<Dtype>* ptr = (ConvolutionSparseLayer<Dtype>*)(&(*layers_[target_layer_id]));
+      ptr->CopyFromConvLayer(source_layer);
+      continue;
+    } 
     vector<shared_ptr<Blob<Dtype> > >& target_blobs =
-        layers_[target_layer_id]->blobs();
+      layers_[target_layer_id]->blobs();
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {

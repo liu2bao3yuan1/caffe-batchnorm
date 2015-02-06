@@ -36,6 +36,18 @@ template ConvolutionLayer<float>* GetConvolutionLayer(const string& name,
 template ConvolutionLayer<double>* GetConvolutionLayer(const string& name,
     const LayerParameter& param);
 
+// Get convolution sparse layer according to engine.
+template <typename Dtype>
+ConvolutionSparseLayer<Dtype>* GetConvolutionSparseLayer(const string& name,
+    const LayerParameter& param) {
+  return new ConvolutionSparseLayer<Dtype>(param);
+}
+
+template ConvolutionSparseLayer<float>* GetConvolutionSparseLayer(const string& name,
+    const LayerParameter& param);
+template ConvolutionSparseLayer<double>* GetConvolutionSparseLayer(const string& name,
+    const LayerParameter& param);
+
 // Get pooling layer according to engine.
 template <typename Dtype>
 PoolingLayer<Dtype>* GetPoolingLayer(const string& name,
@@ -193,6 +205,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new ContrastiveLossLayer<Dtype>(param);
   case LayerParameter_LayerType_CONVOLUTION:
     return GetConvolutionLayer<Dtype>(name, param);
+  case LayerParameter_LayerType_CONVOLUTIONSPARSE:
+    return GetConvolutionSparseLayer<Dtype>(name, param);
   case LayerParameter_LayerType_DATA:
     return new DataLayer<Dtype>(param);
   case LayerParameter_LayerType_DROPOUT:

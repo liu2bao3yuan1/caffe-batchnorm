@@ -146,7 +146,7 @@ void ConvolutionSparseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (bias_term_) {
     bias_multiplier_.Reshape(1, 1, 1, N_);
-    caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+    caffe_set(N_, Dtype(1.), bias_multiplier_.mutable_cpu_data());
   }
 }
 
@@ -380,47 +380,6 @@ void ConvolutionSparseLayer<Dtype>::UpdatePCA() {
       }
     }
   } 
-}
-
-template <typename Dtype>
-void ConvolutionSparseLayer<Dtype>::UpdatePtrs() {
-  Dtype* col_data = col_buffer_.mutable_gpu_data();
-  Dtype* col_diff = col_buffer_.mutable_gpu_diff();
-  Dtype* w1_data = this->blobs_[1]->mutable_gpu_data();
-  Dtype* w1_diff = this->blobs_[1]->mutable_gpu_diff();
-  Dtype* c1_data = c1_buffer_.mutable_gpu_data();
-  Dtype* c1_diff = c1_buffer_.mutable_gpu_diff();
-
-  // Setup gpu pointers for gemm batch mode 
-  Dtype** col_data_ptrs_cpu = new Dtype*[channels_];
-  Dtype** col_diff_ptrs_cpu = new Dtype*[channels_];
-  Dtype** w1_data_ptrs_cpu = new Dtype*[channels_];
-  Dtype** w1_diff_ptrs_cpu = new Dtype*[channels_];
-  Dtype** c1_data_ptrs_cpu = new Dtype*[channels_];
-  Dtype** c1_diff_ptrs_cpu = new Dtype*[channels_];
-
-  for(int i=0; i<channels_; i++) {
-    col_data_ptrs_cpu[i] = col_data + kernel_h_ * kernel_w_ * N_ * i;
-    col_diff_ptrs_cpu[i] = col_diff + kernel_h_ * kernel_w_ * N_*i;
-    w1_data_ptrs_cpu[i] = w1_data + i * kernel_h_ * kernel_w_ * kernel_h_ * kernel_w_;
-    w1_diff_ptrs_cpu[i] = w1_diff + i * kernel_h_ * kernel_w_ * kernel_h_ * kernel_w_;
-    c1_data_ptrs_cpu[i] = c1_data + kernel_h_ * kernel_w_ * N_ * i;
-    c1_diff_ptrs_cpu[i] = c1_diff + kernel_h_ * kernel_w_ * N_ * i;
-  }
-
-  cudaMemcpy(col_data_ptrs_gpu, col_data_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(col_diff_ptrs_gpu, col_diff_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(w1_data_ptrs_gpu, w1_data_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(w1_diff_ptrs_gpu, w1_diff_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(c1_data_ptrs_gpu, c1_data_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
-  cudaMemcpy(c1_diff_ptrs_gpu, c1_diff_ptrs_cpu, channels_ * sizeof(Dtype*), cudaMemcpyHostToDevice);
-
-  delete[] col_data_ptrs_cpu;
-  delete[] col_diff_ptrs_cpu;
-  delete[] w1_data_ptrs_cpu;
-  delete[] w1_diff_ptrs_cpu;
-  delete[] c1_data_ptrs_cpu;
-  delete[] c1_diff_ptrs_cpu;
 }
 
 #ifdef CPU_ONLY

@@ -238,6 +238,7 @@ message LayerParameter {
     CONCAT = 3;
     CONTRASTIVE_LOSS = 37;
     CONVOLUTION = 4;
+    CONVOLUTIONSPARSE = 38;
     DATA = 5;
     DROPOUT = 6;
     DUMMY_DATA = 32;
