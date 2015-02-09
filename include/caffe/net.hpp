@@ -132,6 +132,8 @@ class Net {
   /// @brief returns the parameter learning rate multipliers
   inline vector<float>& params_lr() { return params_lr_; }
   inline vector<float>& params_weight_decay() { return params_weight_decay_; }
+  inline vector<float>& params_weight_decay_l1() { return params_weight_decay_l1_; }
+  inline vector<float>& params_weight_decay_l1g() { return params_weight_decay_l1g_; }
   const map<string, int>& param_names_index() { return param_names_index_; }
   /// @brief Input and output blob numbers
   inline int num_inputs() { return net_input_blobs_.size(); }
@@ -220,6 +222,8 @@ class Net {
   vector<float> params_lr_;
   /// the weight decay multipliers
   vector<float> params_weight_decay_;
+  vector<float> params_weight_decay_l1_;
+  vector<float> params_weight_decay_l1g_;
   /// The bytes of memory used by this net
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.

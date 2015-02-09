@@ -44,10 +44,18 @@ layers {
   blobs_lr: 1
   blobs_lr: 1
   blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 1
-  weight_decay: 1
   weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0.15
+  weight_decay_l1: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0.1
+  weight_decay_l1g: 0
   convolution_param {
     num_output: 96
     kernel_size: 11
@@ -60,6 +68,7 @@ layers {
       type: "constant"
       value: 0
     }
+    is_pca_channel: true
   }
 }
 layers {
@@ -99,10 +108,18 @@ layers {
   blobs_lr: 1
   blobs_lr: 1
   blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 1
-  weight_decay: 1
   weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0.15
+  weight_decay_l1: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0.1
+  weight_decay_l1g: 0
   convolution_param {
     num_output: 256
     pad: 2
@@ -116,6 +133,7 @@ layers {
       type: "constant"
       value: 1
     }
+    is_pca_channel: true
   }
 }
 layers {
@@ -151,14 +169,22 @@ layers {
   type: CONVOLUTIONSPARSE
   bottom: "norm2"
   top: "conv3"
-  blobs_lr: 1
+  blobs_lr: 0
   blobs_lr: 1
   blobs_lr: 1
   blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 1
-  weight_decay: 1
   weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0.15
+  weight_decay_l1: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0.1
+  weight_decay_l1g: 0
   convolution_param {
     num_output: 384
     pad: 1
@@ -184,14 +210,22 @@ layers {
   type: CONVOLUTIONSPARSE
   bottom: "conv3"
   top: "conv4"
-  blobs_lr: 1
+  blobs_lr: 0
   blobs_lr: 1
   blobs_lr: 1
   blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 1
-  weight_decay: 1
   weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0.15
+  weight_decay_l1: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0.1
+  weight_decay_l1g: 0
   convolution_param {
     num_output: 384
     pad: 1
@@ -218,14 +252,22 @@ layers {
   type: CONVOLUTIONSPARSE
   bottom: "conv4"
   top: "conv5"
-  blobs_lr: 1
+  blobs_lr: 0
   blobs_lr: 1
   blobs_lr: 1
   blobs_lr: 2
-  weight_decay: 1
-  weight_decay: 1
-  weight_decay: 1
   weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0
+  weight_decay_l1: 0.15
+  weight_decay_l1: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0
+  weight_decay_l1g: 0.1
+  weight_decay_l1g: 0
   convolution_param {
     num_output: 256
     pad: 1

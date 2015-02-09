@@ -9,6 +9,8 @@ display: 20
 max_iter: 450000
 momentum: 0.9
 weight_decay: 0.0005
+weight_decay_l1: 0.0005
+weight_decay_l1g: 0.0005
 snapshot: 10000
 snapshot_prefix: "models/scnn/caffenet_train"
 solver_mode: GPU

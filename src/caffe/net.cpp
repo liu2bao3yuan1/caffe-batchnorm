@@ -489,6 +489,12 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
         float local_decay = layers_[i]->layer_param().weight_decay(j);
         CHECK_GE(local_decay, 0.);
         params_weight_decay_.push_back(local_decay);
+        float local_decay_l1 = layers_[i]->layer_param().weight_decay_l1(j);
+        CHECK_GE(local_decay_l1, 0.);
+        params_weight_decay_l1_.push_back(local_decay_l1);
+        float local_decay_l1g = layers_[i]->layer_param().weight_decay_l1g(j);
+        CHECK_GE(local_decay_l1g, 0.);
+        params_weight_decay_l1g_.push_back(local_decay_l1g);
       }
     } else {
       for (int j = 0; j < layer_blobs.size(); ++j) {

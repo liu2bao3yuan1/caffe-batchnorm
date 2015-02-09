@@ -275,6 +275,26 @@ void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
   }
 }
 
+// statistics
+template <typename Dtype>
+Dtype Blob<Dtype>::norm(const int p) {
+  const Dtype* ptr = (const Dtype*)data_->cpu_data();
+  Dtype n_p = 0;
+  if (p == 1) {
+    for(int i = 0; i < count_; ++i) {
+      n_p += fabs(ptr[i]);
+    }
+  } else if (p==2) {
+    for(int i = 0; i < count_; ++i) {
+      n_p += ptr[i] * ptr[i];
+    } 
+    n_p = sqrt(n_p);
+  } else {
+    LOG(FATAL) << "Blob::norm: Unknown norm: " << p;
+  } 
+  return n_p;
+}
+
 INSTANTIATE_CLASS(Blob);
 template class Blob<int>;
 template class Blob<unsigned int>;

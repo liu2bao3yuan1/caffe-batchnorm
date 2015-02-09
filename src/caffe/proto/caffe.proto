@@ -121,6 +121,9 @@ message SolverParameter {
   optional float power = 10; // The parameter to compute the learning rate.
   optional float momentum = 11; // The momentum value.
   optional float weight_decay = 12; // The weight decay.
+  // weight decay for l1 regularization
+  optional float weight_decay_l1 = 35 [default = 0.];
+  optional float weight_decay_l1g = 36 [default = 0.];
   // regularization types supported: L1 and L2
   // controlled by weight_decay
   optional string regularization_type = 29 [default = "L2"];
@@ -162,6 +165,7 @@ message SolverParameter {
 
   // If false, don't save a snapshot after training finishes.
   optional bool snapshot_after_train = 28 [default = true];
+
 }
 
 // A message that stores the solver snapshots
@@ -291,6 +295,8 @@ message LayerParameter {
   repeated float blobs_lr = 7;
   // The weight decay that is multiplied on the global weight decay.
   repeated float weight_decay = 8;
+  repeated float weight_decay_l1 = 41;
+  repeated float weight_decay_l1g = 42;
 
   // The amount of weight to assign each top blob in the objective.
   // Each layer assigns a default value, usually of either 0 or 1,
@@ -407,6 +413,7 @@ message ConvolutionParameter {
   }
   optional Engine engine = 15 [default = DEFAULT];
   optional bool is_pca_channel = 16 [default = false];
+  // l1 weight decay
 }
 
 // Message that stores parameters used by DataLayer
@@ -745,6 +752,8 @@ message V0LayerParameter {
   repeated float blobs_lr = 51;
   // The weight decay that is multiplied on the global weight decay.
   repeated float weight_decay = 52;
+  repeated float weight_decay_l1 = 66;
+  repeated float weight_decay_l1g = 67;
 
   // The rand_skip variable is for the data layer to skip a few data points
   // to avoid all asynchronous sgd clients to start at the same point. The skip

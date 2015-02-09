@@ -227,6 +227,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
               << result_vec[k] << loss_msg_stream.str();
         }
       }
+      Log_l1();
     }
 
     ComputeUpdateValue();
@@ -440,6 +441,8 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
   vector<float>& net_params_lr = this->net_->params_lr();
   vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
+  vector<float>& net_params_weight_decay_l1 = this->net_->params_weight_decay_l1();
+  vector<float>& net_params_weight_decay_l1g = this->net_->params_weight_decay_l1g();
   // get the learning rate
   Dtype rate = GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
@@ -447,6 +450,8 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
   }
   Dtype momentum = this->param_.momentum();
   Dtype weight_decay = this->param_.weight_decay();
+  Dtype weight_decay_l1 = this->param_.weight_decay_l1();
+  Dtype weight_decay_l1g = this->param_.weight_decay_l1g();
   string regularization_type = this->param_.regularization_type();
   switch (Caffe::mode()) {
   case Caffe::CPU:
@@ -490,6 +495,8 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
       // Compute the value to history, and then copy them to the blob's diff.
       Dtype local_rate = rate * net_params_lr[param_id];
       Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+      Dtype local_decay_l1 = weight_decay_l1 * net_params_weight_decay_l1[param_id];
+      Dtype local_decay_l1g = weight_decay_l1g * net_params_weight_decay_l1g[param_id];
 
       if (local_decay) {
         if (regularization_type == "L2") {
@@ -514,6 +521,23 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
       caffe_gpu_axpby(net_params[param_id]->count(), local_rate,
                 net_params[param_id]->gpu_diff(), momentum,
                 history_[param_id]->mutable_gpu_data());
+
+      // group lasso constraint
+      if (local_decay_l1g > 0) {
+        int GROUP_ = net_params[param_id-1]->channels() / net_params[param_id]->channels();
+        caffe_l1_reg_group(local_decay_l1g * local_rate, GROUP_, *net_params[param_id], *history_[param_id]);
+      }
+
+      // lasso constraint
+      if (local_decay_l1 > 0) {
+        // add weight decay l1
+        // LOG(INFO) << "weight_decay_l1 = " << local_decay_l1 * local_rate;
+        caffe_l1_reg(net_params[param_id]->count(),
+            local_decay_l1 * local_rate,
+            net_params[param_id]->gpu_data(),
+            history_[param_id]->mutable_gpu_data());
+      }
+
       // copy
       caffe_copy(net_params[param_id]->count(),
           history_[param_id]->gpu_data(),
@@ -790,6 +814,43 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue() {
 #else
     NO_GPU;
 #endif
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+  }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Log_l1() {
+  vector<shared_ptr<Blob<Dtype> > >& net_params = this->net_->params();
+  vector<float>& net_params_weight_decay = this->net_->params_weight_decay();
+  vector<float>& net_params_weight_decay_l1 = this->net_->params_weight_decay_l1();
+  vector<float>& net_params_weight_decay_l1g = this->net_->params_weight_decay_l1g();
+
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    break;
+  case Caffe::GPU:
+    for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      if(net_params_weight_decay_l1[param_id]<=0)
+        continue;
+      int nz = 0;
+      int n = net_params[param_id]->count();
+      const Dtype* weight = net_params[param_id]->cpu_data();
+      for(int i=0;i<n;i++)
+      {
+        if(weight[i]<=1e-4 && weight[i]>=-1e-4)
+          nz++;
+      }
+      float sparsity = float(nz)/float(n); 
+
+      LOG(INFO) << "param_id = "<< param_id 
+        <<", n = " << n 
+        << ", sparsity = " << sparsity 
+        << ", l1_norm = " << net_params[param_id]->norm(1) 
+        << ", weight_decay_l1 = "<< net_params_weight_decay_l1[param_id]
+        << ", weight_decay_l1g = "<< net_params_weight_decay_l1g[param_id];
+    }
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();

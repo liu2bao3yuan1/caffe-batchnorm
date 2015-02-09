@@ -125,6 +125,7 @@ class Blob {
    * shared_ptr calls its destructor when reset with the "=" operator.
    */
   void ShareDiff(const Blob& other);
+  Dtype norm(const int p);
 
  protected:
   shared_ptr<SyncedMemory> data_;
