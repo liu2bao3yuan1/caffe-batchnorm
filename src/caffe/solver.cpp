@@ -188,6 +188,10 @@ void Solver<Dtype>::Solve(const char* resume_file) {
         iter_ % param_.snapshot() == 0) {
       Snapshot();
     }
+    if (param_.snapshotconv() && iter_ > start_iter &&
+        iter_ % param_.snapshotconv() == 0) {
+      SnapshotConv();
+    }
 
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())) {
@@ -346,6 +350,33 @@ void Solver<Dtype>::Snapshot() {
 }
 
 template <typename Dtype>
+void Solver<Dtype>::SnapshotConv() {
+  NetParameter net_param;
+  // For intermediate results, we will also dump the gradient values.
+  net_->ToProtoConv(&net_param, param_.snapshot_diff());
+  string filename(param_.snapshot_prefix());
+  filename += "_conv";
+  string model_filename, snapshot_filename;
+  const int kBufferSize = 20;
+  char iter_str_buffer[kBufferSize];
+  snprintf(iter_str_buffer, kBufferSize, "_iter_%d", iter_);
+  filename += iter_str_buffer;
+  model_filename = filename + ".caffemodel";
+  LOG(INFO) << "Snapshotting to " << model_filename;
+  WriteProtoToBinaryFile(net_param, model_filename.c_str());
+  /*
+  SolverState state;
+  SnapshotSolverState(&state);
+  state.set_iter(iter_);
+  state.set_learned_net(model_filename);
+  state.set_current_step(current_step_);
+  snapshot_filename = filename + ".solverstate";
+  LOG(INFO) << "Snapshotting solver state to " << snapshot_filename;
+  WriteProtoToBinaryFile(state, snapshot_filename.c_str());
+  */
+}
+
+template <typename Dtype>
 void Solver<Dtype>::Restore(const char* state_file) {
   SolverState state;
   NetParameter net_param;
@@ -358,7 +389,6 @@ void Solver<Dtype>::Restore(const char* state_file) {
   current_step_ = state.current_step();
   RestoreSolverState(state);
 }
-
 
 // Return the current learning rate. The currently implemented learning rate
 // policies are as follows:
@@ -832,6 +862,7 @@ void Solver<Dtype>::Log_l1() {
     break;
   case Caffe::GPU:
     for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+      LOG(INFO) << "param_id = "<< param_id << ", l1_norm = " << net_params[param_id]->norm_data(1) << ", l1_norm_diff = " << net_params[param_id]->norm_diff(1);
       if(net_params_weight_decay_l1[param_id]<=0)
         continue;
       int nz = 0;
@@ -847,7 +878,7 @@ void Solver<Dtype>::Log_l1() {
       LOG(INFO) << "param_id = "<< param_id 
         <<", n = " << n 
         << ", sparsity = " << sparsity 
-        << ", l1_norm = " << net_params[param_id]->norm(1) 
+        << ", l1_norm = " << net_params[param_id]->norm_data(1) 
         << ", weight_decay_l1 = "<< net_params_weight_decay_l1[param_id]
         << ", weight_decay_l1g = "<< net_params_weight_decay_l1g[param_id];
     }

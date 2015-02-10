@@ -132,6 +132,7 @@ message SolverParameter {
   // the stepsize for learning rate policy "multistep"
   repeated int32 stepvalue = 34;
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
+  optional int32 snapshotconv = 37 [default = 0]; // The snapshot conv interval
   optional string snapshot_prefix = 15; // The prefix for the snapshot.
   // whether to snapshot diff in the results or not. Snapshotting diff will help
   // debugging but the final protocol buffer size will be much larger.

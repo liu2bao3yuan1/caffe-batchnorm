@@ -481,6 +481,7 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
         params_lr_.push_back(1.);
       }
     }
+
     // push the weight decay multipliers
     if (layers_[i]->layer_param().weight_decay_size()) {
       CHECK_EQ(layers_[i]->layer_param().weight_decay_size(),
@@ -489,18 +490,41 @@ void Net<Dtype>::GetLearningRateAndWeightDecay() {
         float local_decay = layers_[i]->layer_param().weight_decay(j);
         CHECK_GE(local_decay, 0.);
         params_weight_decay_.push_back(local_decay);
-        float local_decay_l1 = layers_[i]->layer_param().weight_decay_l1(j);
-        CHECK_GE(local_decay_l1, 0.);
-        params_weight_decay_l1_.push_back(local_decay_l1);
-        float local_decay_l1g = layers_[i]->layer_param().weight_decay_l1g(j);
-        CHECK_GE(local_decay_l1g, 0.);
-        params_weight_decay_l1g_.push_back(local_decay_l1g);
       }
     } else {
       for (int j = 0; j < layer_blobs.size(); ++j) {
         params_weight_decay_.push_back(1.);
       }
     }
+    // push the weight decay l1 multipliers
+    if (layers_[i]->layer_param().weight_decay_l1_size()) {
+      CHECK_EQ(layers_[i]->layer_param().weight_decay_l1_size(),
+          layer_blobs.size());
+      for (int j = 0; j < layer_blobs.size(); ++j) {
+        float local_decay_l1 = layers_[i]->layer_param().weight_decay_l1(j);
+        CHECK_GE(local_decay_l1, 0.);
+        params_weight_decay_l1_.push_back(local_decay_l1);
+      }
+    } else {
+      for (int j = 0; j < layer_blobs.size(); ++j) {
+        params_weight_decay_l1_.push_back(0.);
+      }
+    }
+    // push the weight decay l1 group multipliers
+    if (layers_[i]->layer_param().weight_decay_l1g_size()) {
+      CHECK_EQ(layers_[i]->layer_param().weight_decay_l1g_size(),
+          layer_blobs.size());
+      for (int j = 0; j < layer_blobs.size(); ++j) {
+        float local_decay_l1g = layers_[i]->layer_param().weight_decay_l1g(j);
+        CHECK_GE(local_decay_l1g, 0.);
+        params_weight_decay_l1g_.push_back(local_decay_l1g);
+      }
+    } else {
+      for (int j = 0; j < layer_blobs.size(); ++j) {
+        params_weight_decay_l1g_.push_back(0.);
+      }
+    }
+
   }
 }
 
@@ -759,6 +783,28 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) {
   }
 }
 
+template <typename Dtype>
+void Net<Dtype>::ToProtoConv(NetParameter* param, bool write_diff) {
+  param->Clear();
+  param->set_name(name_);
+  // Add bottom and top
+  for (int i = 0; i < net_input_blob_indices_.size(); ++i) {
+    param->add_input(blob_names_[net_input_blob_indices_[i]]);
+  }
+  DLOG(INFO) << "Serializing " << layers_.size() << " layers";
+  for (int i = 0; i < layers_.size(); ++i) {
+    LayerParameter* layer_param = param->add_layers();
+    for (int j = 0; j < bottom_id_vecs_[i].size(); ++j) {
+      layer_param->add_bottom(blob_names_[bottom_id_vecs_[i][j]]);
+    }
+    for (int j = 0; j < top_id_vecs_[i].size(); ++j) {
+      layer_param->add_top(blob_names_[top_id_vecs_[i][j]]);
+    }
+    if (layers_[i]->layer_param().type() == LayerParameter_LayerType_CONVOLUTION) {
+      layers_[i]->ToProto(layer_param, write_diff);
+    }
+  }
+}
 template <typename Dtype>
 void Net<Dtype>::Update() {
   // First, accumulate the diffs of any shared parameters into their owner's

@@ -100,6 +100,7 @@ class Net {
   void CopyTrainedLayersFrom(const string trained_filename);
   /// @brief Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false);
+  void ToProtoConv(NetParameter* param, bool write_diff = false);
 
   /// @brief returns the network name.
   inline const string& name() { return name_; }
