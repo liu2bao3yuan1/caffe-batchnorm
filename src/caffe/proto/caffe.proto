@@ -264,6 +264,7 @@ message LayerParameter {
     POOLING = 17;
     POWER = 26;
     RELU = 18;
+    SYMRELU = 39;
     SIGMOID = 19;
     SIGMOID_CROSS_ENTROPY_LOSS = 27;
     SILENCE = 36;

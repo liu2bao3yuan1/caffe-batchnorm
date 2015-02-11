@@ -102,6 +102,19 @@ template ReLULayer<float>* GetReLULayer(const string& name,
 template ReLULayer<double>* GetReLULayer(const string& name,
     const LayerParameter& param);
 
+// Get relu layer according to engine.
+template <typename Dtype>
+SymReLULayer<Dtype>* GetSymReLULayer(const string& name,
+    const LayerParameter& param) {
+  return new SymReLULayer<Dtype>(param);
+}
+
+template SymReLULayer<float>* GetSymReLULayer(const string& name,
+    const LayerParameter& param);
+template SymReLULayer<double>* GetSymReLULayer(const string& name,
+    const LayerParameter& param);
+
+
 // Get sigmoid layer according to engine.
 template <typename Dtype>
 SigmoidLayer<Dtype>* GetSigmoidLayer(const string& name,
@@ -247,6 +260,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new PowerLayer<Dtype>(param);
   case LayerParameter_LayerType_RELU:
     return GetReLULayer<Dtype>(name, param);
+  case LayerParameter_LayerType_SYMRELU:
+    return GetSymReLULayer<Dtype>(name, param);
   case LayerParameter_LayerType_SILENCE:
     return new SilenceLayer<Dtype>(param);
   case LayerParameter_LayerType_SIGMOID:

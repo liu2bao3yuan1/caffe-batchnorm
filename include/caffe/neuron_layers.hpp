@@ -358,6 +358,32 @@ class ReLULayer : public NeuronLayer<Dtype> {
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
 };
 
+template <typename Dtype>
+class SymReLULayer : public NeuronLayer<Dtype> {
+ public:
+  explicit SymReLULayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_SYMRELU;
+  }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  int num_;
+  int channels_;
+  int height_, width_;
+};
+
 #ifdef USE_CUDNN
 /**
  * @brief CuDNN acceleration of ReLULayer.

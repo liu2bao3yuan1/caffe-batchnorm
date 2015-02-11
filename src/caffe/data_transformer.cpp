@@ -27,7 +27,8 @@ void DataTransformer<Dtype>::Transform(const int batch_item_id,
   }
 
   // Bias value for color jittering
-  if (phase_ == Caffe::TRAIN) {
+  // if (phase_ == Caffe::TRAIN)
+  if (false) {
     caffe_rng_gaussian(3, (Dtype)0., (Dtype)0.1, bias_rand_);
     bias_val_[0] = bias_pca_[0][0] * bias_rand_[0] + 
       bias_pca_[1][0] * bias_rand_[1] +
