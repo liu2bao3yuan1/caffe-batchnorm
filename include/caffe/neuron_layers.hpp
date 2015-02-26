@@ -302,6 +302,8 @@ class ReLULayer : public NeuronLayer<Dtype> {
    */
   explicit ReLULayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_RELU;
@@ -323,6 +325,10 @@ class ReLULayer : public NeuronLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  void Print(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>* top);
+  int num_sample_;
+  Blob<unsigned> num_pos_;
 
   /**
    * @brief Computes the error gradient w.r.t. the ReLU inputs.

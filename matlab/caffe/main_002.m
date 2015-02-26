@@ -3,10 +3,10 @@ im = imread('../../examples/images/cat.jpg');
 use_gpu = 1;
 if ~exist('weight_conv.mat', 'file')
   weight_conv = cell(0,0);
-  for iter = 100:300:100000
+  for iter = 100:200:14000
     fprintf('iter = %d\n', iter);
-    model_def_file = '../../models/bvlc_reference_caffenet/deploy.prototxt';
-    model_file = sprintf('../../models/bvlc_reference_caffenet/caffenet_train_conv_iter_%d.caffemodel', iter);
+    model_def_file = '../../models/symrelu/deploy.prototxt';
+    model_file = sprintf('../../models/symrelu/caffenet_train_conv_iter_%d.caffemodel', iter);
   %   model_file = '../../models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel';
 
     caffe('reset');
@@ -19,6 +19,29 @@ if ~exist('weight_conv.mat', 'file')
 else
   load('weight_conv.mat');
 end
+
+ndiff_all = [];
+n_iter = numel(weight_conv);
+step = 1;
+conv = 4;
+for iter = 1 + step : n_iter
+%   w_ = weight_conv{iter - step}(conv).weights{1};
+  w_ = weight_conv{n_iter}(conv).weights{1};
+  w = weight_conv{iter}(conv).weights{1};
+  for ifilter = 1:size(w,4)
+    w_(:,:,:,ifilter) = w_(:,:,:,ifilter) / norm(reshape(w_(:,:,:,ifilter),1,[]));
+    w(:,:,:,ifilter) = w(:,:,:,ifilter) / norm(reshape(w(:,:,:,ifilter),1,[]));
+  end
+%   w_ = w_ / norm(w_(:));
+%   w = w / norm(w(:));
+  ndiff = norm(w(:) - w_(:)) / norm(w(:));
+  fprintf('iter = %d, normalized diff = %f\n', iter, ndiff);
+  ndiff_all = [ndiff_all, ndiff];
+end
+plot(ndiff_all);
+
+
+return;
 
 
 %% conv1

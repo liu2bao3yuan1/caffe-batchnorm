@@ -17,6 +17,9 @@ __global__ void ReLUForward(const int n, const Dtype* in, Dtype* out,
 template <typename Dtype>
 void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
+  if (Caffe::phase() == Caffe::TEST) {
+    // this->Print(bottom, top);
+  }
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
