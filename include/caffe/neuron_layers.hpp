@@ -302,16 +302,9 @@ class ReLULayer : public NeuronLayer<Dtype> {
    */
   explicit ReLULayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      vector<Blob<Dtype>*>* top);
-
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_RELU;
   }
-
-  void Analysis(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>* top);
-  void PrintAnalysis();
 
  protected:
   /**
@@ -329,10 +322,6 @@ class ReLULayer : public NeuronLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
-  void Print(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>* top);
-  int num_sample_;
-  Blob<unsigned> num_pos_;
 
   /**
    * @brief Computes the error gradient w.r.t. the ReLU inputs.
@@ -362,6 +351,38 @@ class ReLULayer : public NeuronLayer<Dtype> {
    *        \end{array} \right.
    *      @f$.
    */
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+};
+
+template <typename Dtype>
+class ReLUModLayer : public NeuronLayer<Dtype> {
+ public:
+  explicit ReLUModLayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_RELU;
+  }
+
+  void Analysis(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>* top);
+  void PrintAnalysis();
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  void Print(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>* top);
+  int num_sample_;
+  Blob<unsigned> num_pos_;
+
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,

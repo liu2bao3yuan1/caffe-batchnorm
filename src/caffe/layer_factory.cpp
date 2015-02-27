@@ -102,7 +102,7 @@ template ReLULayer<float>* GetReLULayer(const string& name,
 template ReLULayer<double>* GetReLULayer(const string& name,
     const LayerParameter& param);
 
-// Get relu layer according to engine.
+// Get symrelu layer according to engine.
 template <typename Dtype>
 SymReLULayer<Dtype>* GetSymReLULayer(const string& name,
     const LayerParameter& param) {
@@ -114,6 +114,17 @@ template SymReLULayer<float>* GetSymReLULayer(const string& name,
 template SymReLULayer<double>* GetSymReLULayer(const string& name,
     const LayerParameter& param);
 
+// Get relumod layer according to engine.
+template <typename Dtype>
+ReLUModLayer<Dtype>* GetReLUModLayer(const string& name,
+    const LayerParameter& param) {
+  return new ReLUModLayer<Dtype>(param);
+}
+
+template ReLUModLayer<float>* GetReLUModLayer(const string& name,
+    const LayerParameter& param);
+template ReLUModLayer<double>* GetReLUModLayer(const string& name,
+    const LayerParameter& param);
 
 // Get sigmoid layer according to engine.
 template <typename Dtype>
@@ -262,6 +273,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return GetReLULayer<Dtype>(name, param);
   case LayerParameter_LayerType_SYMRELU:
     return GetSymReLULayer<Dtype>(name, param);
+  case LayerParameter_LayerType_RELUMOD:
+    return GetReLUModLayer<Dtype>(name, param);
   case LayerParameter_LayerType_SILENCE:
     return new SilenceLayer<Dtype>(param);
   case LayerParameter_LayerType_SIGMOID:

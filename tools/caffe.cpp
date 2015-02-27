@@ -19,7 +19,7 @@ using caffe::Layer;
 using caffe::shared_ptr;
 using caffe::Timer;
 using caffe::vector;
-using caffe::ReLULayer;
+using caffe::ReLUModLayer;
 
 
 DEFINE_int32(gpu, -1,
@@ -194,9 +194,9 @@ int test() {
 
   // PrintAnalysis for ReLU layers
   for (int i = 0; i < caffe_net.layers().size(); ++i) {
-    if (caffe_net.layers()[i]->layer_param().type() == caffe::LayerParameter_LayerType_RELU) {
+    if (caffe_net.layers()[i]->layer_param().type() == caffe::LayerParameter_LayerType_RELUMOD) {
       // Nasty pointer conversion here
-      ReLULayer<float>* ptr = (ReLULayer<float>*)(&(*caffe_net.layers()[i]));
+      ReLUModLayer<float>* ptr = (ReLUModLayer<float>*)(&(*caffe_net.layers()[i]));
       ptr->PrintAnalysis();
     }
   }

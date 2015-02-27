@@ -265,6 +265,7 @@ message LayerParameter {
     POWER = 26;
     RELU = 18;
     SYMRELU = 39;
+    RELUMOD = 40;
     SIGMOID = 19;
     SIGMOID_CROSS_ENTROPY_LOSS = 27;
     SILENCE = 36;
