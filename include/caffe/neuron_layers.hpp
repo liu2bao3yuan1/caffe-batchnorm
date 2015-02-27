@@ -309,6 +309,10 @@ class ReLULayer : public NeuronLayer<Dtype> {
     return LayerParameter_LayerType_RELU;
   }
 
+  void Analysis(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>* top);
+  void PrintAnalysis();
+
  protected:
   /**
    * @param bottom input Blob vector (length 1)

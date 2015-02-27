@@ -18,7 +18,7 @@ template <typename Dtype>
 void ReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   if (Caffe::phase() == Caffe::TEST) {
-    // this->Print(bottom, top);
+    this->Analysis(bottom, top);
   }
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();

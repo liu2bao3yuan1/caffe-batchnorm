@@ -6,6 +6,11 @@
 #include <vector>
 
 #include "caffe/caffe.hpp"
+#include "caffe/proto/caffe.pb.h"
+#include "caffe/blob.hpp"
+#include "caffe/common.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/proto/caffe.pb.h"
 
 using caffe::Blob;
 using caffe::Caffe;
@@ -14,6 +19,7 @@ using caffe::Layer;
 using caffe::shared_ptr;
 using caffe::Timer;
 using caffe::vector;
+using caffe::ReLULayer;
 
 
 DEFINE_int32(gpu, -1,
@@ -184,6 +190,15 @@ int test() {
                       << " = " << loss_weight * mean_score << " loss)";
     }
     LOG(INFO) << output_name << " = " << mean_score << loss_msg_stream.str();
+  }
+
+  // PrintAnalysis for ReLU layers
+  for (int i = 0; i < caffe_net.layers().size(); ++i) {
+    if (caffe_net.layers()[i]->layer_param().type() == caffe::LayerParameter_LayerType_RELU) {
+      // Nasty pointer conversion here
+      ReLULayer<float>* ptr = (ReLULayer<float>*)(&(*caffe_net.layers()[i]));
+      ptr->PrintAnalysis();
+    }
   }
 
   return 0;
