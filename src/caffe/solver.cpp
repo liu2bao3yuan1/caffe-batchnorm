@@ -11,6 +11,7 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 #include "caffe/util/reg.hpp"
+#include "caffe/util/exp.hpp"
 
 namespace caffe {
 
@@ -572,6 +573,12 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
       caffe_copy(net_params[param_id]->count(),
           history_[param_id]->gpu_data(),
           net_params[param_id]->mutable_gpu_diff());
+
+      // experimental
+      string filename;
+      stringstream filename_stream;
+      filename_stream << param_id << "-stats";
+      conv_neuron_stats(*net_params[param_id], filename_stream.str());
     }
 #else
     NO_GPU;
