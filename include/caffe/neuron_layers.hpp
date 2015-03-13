@@ -364,6 +364,8 @@ class ReLUModLayer : public NeuronLayer<Dtype> {
       : NeuronLayer<Dtype>(param) {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top);
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
     return LayerParameter_LayerType_RELU;
@@ -382,6 +384,11 @@ class ReLUModLayer : public NeuronLayer<Dtype> {
       const vector<Blob<Dtype>*>* top);
   int num_sample_;
   Blob<unsigned> num_pos_;
+  Blob<Dtype> sum_; // mean
+  Blob<Dtype> sum_sq_; // variance
+  Blob<Dtype> sum_prod_; // convariance
+  Blob<unsigned> hist_; //distribution of single filter
+  unsigned hist_res;
 
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
