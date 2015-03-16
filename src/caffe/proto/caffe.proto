@@ -267,7 +267,7 @@ message LayerParameter {
     RELU = 18;
     SYMRELU = 39;
     RELUMOD = 40;
-    RECU = 41;
+    RECU = 42;
     SIGMOID = 19;
     SIGMOID_CROSS_ENTROPY_LOSS = 27;
     SILENCE = 36;
@@ -389,9 +389,10 @@ message BNParameter {
 
 // Message that stores parameters used by ReCULayer
 message ReCUParameter {
-  optional float alpha = 1 [default = 1];
-  optional float beta = 2 [default = 0.2];
-  optional float s = 3 [default = 128];
+  optional float negative_slope = 1 [default = 0];
+  optional float alpha = 2 [default = 1];
+  optional float beta = 3 [default = 0.2];
+  optional float s = 4 [default = 128];
 }
 
 // Message that stores parameters used by ConcatLayer

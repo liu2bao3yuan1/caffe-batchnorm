@@ -7,36 +7,36 @@
 namespace caffe {
 
 template <typename Dtype>
-__global__ void ReCUForward(const int n, const Dtype* in, Dtype* out,
+__global__ void ReCUForward(const int n, const Dtype* bottom, Dtype* top,
     Dtype negative_slope, Dtype xc, Dtype yc, Dtype s, Dtype ys, Dtype beta);
 
 template <>
-__global__ void ReCUForward<float>(const int n, const float* in, float* out,
+__global__ void ReCUForward<float>(const int n, const float* bottom, float* top,
     float negative_slope, float xc, float yc, float s, float ys, float beta) {
   CUDA_KERNEL_LOOP(index, n) {
-    if (in[index] <= 0) {
-      out[index] = negative_slope * in[index];
+    if (bottom[index] <= 0) {
+      top[index] = negative_slope * bottom[index];
     }
-    else if (in[index] <= s) {
-      out[index] = sqrtf(xc * xc + yc * yc - (in[index] - xc) * (in[index] - xc)) - yc;
+    else if (bottom[index] <= s) {
+      top[index] = sqrtf(xc * xc + yc * yc - (bottom[index] - xc) * (bottom[index] - xc)) + yc;
     }
     else {
-      out[index] = ys + (in[index] - s) * beta;
+      top[index] = ys + (bottom[index] - s) * beta;
     }   
   }
 }
 template <>
-__global__ void ReCUForward<double>(const int n, const double* in, double* out,
+__global__ void ReCUForward<double>(const int n, const double* bottom, double* top,
     double negative_slope, double xc, double yc, double s, double ys, double beta) {
   CUDA_KERNEL_LOOP(index, n) {
-    if (in[index] <= 0) {
-      out[index] = negative_slope * in[index];
+    if (bottom[index] <= 0) {
+      top[index] = negative_slope * bottom[index];
     }
-    else if (in[index] <= s) {
-      out[index] = sqrt(xc * xc + yc * yc - (in[index] - xc) * (in[index] - xc)) - yc;
+    else if (bottom[index] <= s) {
+      top[index] = sqrt(xc * xc + yc * yc - (bottom[index] - xc) * (bottom[index] - xc)) + yc;
     }
     else {
-      out[index] = ys + (in[index] - s) * beta;
+      top[index] = ys + (bottom[index] - s) * beta;
     }   
   }
 }
@@ -44,12 +44,12 @@ template <typename Dtype>
 void ReCULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     vector<Blob<Dtype>*>* top) {
   if (Caffe::phase() == Caffe::TEST) {
-    this->Analysis(bottom, top);
+    // this->Analysis(bottom, top);
   }
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = (*top)[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
-  Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
+  Dtype negative_slope = this->layer_param_.recu_param().negative_slope();
   // NOLINT_NEXT_LINE(whitespace/operators)
   ReCUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, bottom_data, top_data, negative_slope, xc, yc, s, ys, beta);
@@ -106,7 +106,7 @@ void ReCULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->gpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_gpu_diff();
     const int count = (*bottom)[0]->count();
-    Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
+    Dtype negative_slope = this->layer_param_.recu_param().negative_slope();
     // NOLINT_NEXT_LINE(whitespace/operators)
     ReCUBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, top_diff, bottom_data, bottom_diff, negative_slope, xc, yc, s, ys, beta);

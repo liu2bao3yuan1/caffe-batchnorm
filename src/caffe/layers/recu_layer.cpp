@@ -16,8 +16,9 @@ void ReCULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   beta = (Dtype)recu_param.beta();
   s = (Dtype)recu_param.s();
   xc = (alpha*s*(alpha + alpha*beta*beta + beta*std::sqrt(((alpha*alpha + 1)*(beta*beta + 1)))))/(alpha*alpha - beta*beta);
-  yc = std::abs(xc/alpha);
-  ys = std::sqrt(xc * xc + yc * yc - (s - xc) * (s - xc)) - yc;
+  yc = -std::abs(xc/alpha);
+  ys = std::sqrt(xc * xc + yc * yc - (s - xc) * (s - xc)) + yc;
+  LOG(INFO) << "xc = " << xc << ", yc = " << yc << ", ys = " << ys << ", alpha = " << alpha << ", beta = " << beta << ", s = " << s;
 
   hist_res = 256;
   num_sample_ = 0;
@@ -50,13 +51,13 @@ void ReCULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = (*top)[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
-  Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
+  Dtype negative_slope = this->layer_param_.recu_param().negative_slope();
   for (int i = 0; i < count; ++i) {
     if (bottom_data[i] <= 0) {
       top_data[i] = negative_slope * bottom_data[i];
     }
     else if (bottom_data[i] <= s) {
-      top_data[i] = std::sqrt(xc * xc + yc * yc - (bottom_data[i] - xc) * (bottom_data[i] - xc)) - yc;
+      top_data[i] = std::sqrt(xc * xc + yc * yc - (bottom_data[i] - xc) * (bottom_data[i] - xc)) + yc;
     }
     else {
       top_data[i] = ys + (bottom_data[i] - s) * beta;
@@ -73,7 +74,7 @@ void ReCULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = (*bottom)[0]->mutable_cpu_diff();
     const int count = (*bottom)[0]->count();
-    Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
+    Dtype negative_slope = this->layer_param_.recu_param().negative_slope();
     for (int i = 0; i < count; ++i) {
       if (bottom_data[i] <= 0) {
         bottom_diff[i] = negative_slope * top_diff[i];

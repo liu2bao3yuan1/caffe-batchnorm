@@ -286,6 +286,8 @@ Layer<Dtype>* GetLayer(const LayerParameter& param) {
     return new PowerLayer<Dtype>(param);
   case LayerParameter_LayerType_RELU:
     return GetReLULayer<Dtype>(name, param);
+  case LayerParameter_LayerType_RECU:
+    return GetReCULayer<Dtype>(name, param);
   case LayerParameter_LayerType_SYMRELU:
     return GetSymReLULayer<Dtype>(name, param);
   case LayerParameter_LayerType_RELUMOD:
