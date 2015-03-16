@@ -358,6 +358,41 @@ class ReLULayer : public NeuronLayer<Dtype> {
 };
 
 template <typename Dtype>
+class ReCULayer : public NeuronLayer<Dtype> {
+ public:
+  explicit ReCULayer(const LayerParameter& param)
+      : NeuronLayer<Dtype>(param) {}
+  virtual inline LayerParameter_LayerType type() const {
+    return LayerParameter_LayerType_RECU;
+  }
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  void Analysis(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>* top);
+  void PrintAnalysis();
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      vector<Blob<Dtype>*>* top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, vector<Blob<Dtype>*>* bottom);
+  Dtype alpha, beta, s, xc, yc, ys;
+  int num_sample_;
+  Blob<unsigned> num_pos_;
+  Blob<Dtype> sum_; // mean
+  Blob<Dtype> sum_sq_; // variance
+  Blob<Dtype> sum_prod_; // convariance
+  Blob<unsigned> hist_; //distribution of single filter
+  unsigned hist_res;
+};
+
+template <typename Dtype>
 class ReLUModLayer : public NeuronLayer<Dtype> {
  public:
   explicit ReLUModLayer(const LayerParameter& param)
@@ -368,7 +403,7 @@ class ReLUModLayer : public NeuronLayer<Dtype> {
       vector<Blob<Dtype>*>* top);
 
   virtual inline LayerParameter_LayerType type() const {
-    return LayerParameter_LayerType_RELU;
+    return LayerParameter_LayerType_RELUMOD;
   }
 
   void Analysis(const vector<Blob<Dtype>*>& bottom,

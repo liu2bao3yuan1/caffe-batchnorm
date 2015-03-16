@@ -267,6 +267,7 @@ message LayerParameter {
     RELU = 18;
     SYMRELU = 39;
     RELUMOD = 40;
+    RECU = 41;
     SIGMOID = 19;
     SIGMOID_CROSS_ENTROPY_LOSS = 27;
     SILENCE = 36;
@@ -309,7 +310,8 @@ message LayerParameter {
 
   optional AccuracyParameter accuracy_param = 27;
   optional ArgMaxParameter argmax_param = 23;
-  optional BNParameter bn_param = 202;
+  optional BNParameter bn_param = 51;
+  optional ReCUParameter recu_param = 52;
   optional ConcatParameter concat_param = 9;
   optional ContrastiveLossParameter contrastive_loss_param = 40;
   optional ConvolutionParameter convolution_param = 10;
@@ -383,6 +385,13 @@ message ArgMaxParameter {
 message BNParameter {
   optional FillerParameter scale_filler = 1; // The filler for the scale
   optional FillerParameter shift_filler = 2; // The filler for the shift
+}
+
+// Message that stores parameters used by ReCULayer
+message ReCUParameter {
+  optional float alpha = 1 [default = 1];
+  optional float beta = 2 [default = 0.2];
+  optional float s = 3 [default = 128];
 }
 
 // Message that stores parameters used by ConcatLayer

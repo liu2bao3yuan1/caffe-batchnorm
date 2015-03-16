@@ -103,6 +103,18 @@ template ReLULayer<float>* GetReLULayer(const string& name,
 template ReLULayer<double>* GetReLULayer(const string& name,
     const LayerParameter& param);
 
+// Get relumod layer according to engine.
+template <typename Dtype>
+ReCULayer<Dtype>* GetReCULayer(const string& name,
+    const LayerParameter& param) {
+  return new ReCULayer<Dtype>(param);
+}
+
+template ReCULayer<float>* GetReCULayer(const string& name,
+    const LayerParameter& param);
+template ReCULayer<double>* GetReCULayer(const string& name,
+    const LayerParameter& param);
+
 // Get symrelu layer according to engine.
 template <typename Dtype>
 SymReLULayer<Dtype>* GetSymReLULayer(const string& name,
