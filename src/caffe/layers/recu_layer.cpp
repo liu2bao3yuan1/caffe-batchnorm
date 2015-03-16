@@ -75,8 +75,15 @@ void ReCULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const int count = (*bottom)[0]->count();
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
     for (int i = 0; i < count; ++i) {
-      bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0)
-          + negative_slope * (bottom_data[i] <= 0));
+      if (bottom_data[i] <= 0) {
+        bottom_diff[i] = negative_slope * top_diff[i];
+      }
+      else if (bottom_data[i] <= s) {
+        bottom_diff[i] = top_diff[i] * (xc - bottom_diff[i]) / std::sqrt(-bottom_diff[i] * bottom_diff[i] + 2 * xc * bottom_diff[i] + yc * yc);
+      }
+      else {
+        bottom_diff[i] = top_diff[i] * beta;
+      }
     }
   }
 }
