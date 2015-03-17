@@ -6,6 +6,10 @@
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
+// bn layer can be performed in place
+// spatial_sum_multiplier_: 1 x 1 x H_ x W_
+// batch_sum_multiplier_: N_ x 1 x 1 x 1
+
 namespace caffe {
 template <typename Dtype>
 void BNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -13,8 +17,8 @@ void BNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   (*top)[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
 
-  x_norm_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-      bottom[0]->height(), bottom[0]->width());
+  // x_norm_.Reshape(bottom[0]->num(), bottom[0]->channels(),
+  //     bottom[0]->height(), bottom[0]->width());
   // Figure out the dimensions
   N_ = bottom[0]->num();
   C_ = bottom[0]->channels();
@@ -28,7 +32,7 @@ void BNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // variance
   spatial_variance_.Reshape(N_, C_, 1, 1);
   batch_variance_.Reshape(1, C_, 1, 1);
-  // buffer blod
+  // buffer blob
   buffer_blob_.Reshape(N_, C_, H_, W_);
 
   // fill spatial multiplier
@@ -74,8 +78,8 @@ void BNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   (*top)[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
 
-  x_norm_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-      bottom[0]->height(), bottom[0]->width());
+  // x_norm_.Reshape(bottom[0]->num(), bottom[0]->channels(),
+  //     bottom[0]->height(), bottom[0]->width());
 
   // Figure out the dimensions
   N_ = bottom[0]->num();
@@ -192,8 +196,11 @@ void BNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       buffer_blob_.cpu_data(), top_data);
 
   // Saving x_norm
+  // caffe_copy(buffer_blob_.count(), const_top_data,
+  //     x_norm_.mutable_cpu_data());
+  Dtype* x_norm = buffer_blob_.mutable_cpu_diff();
   caffe_copy(buffer_blob_.count(), const_top_data,
-      x_norm_.mutable_cpu_data());
+      x_norm);
   // scale
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, N_, C_, 1, Dtype(1),
       batch_sum_multiplier_.cpu_data(), scale_data, Dtype(0),
@@ -230,10 +237,13 @@ void BNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* scale_diff = this->blobs_[0]->mutable_cpu_diff();
   Dtype* shift_diff = this->blobs_[1]->mutable_cpu_diff();
   const Dtype* scale_data = this->blobs_[0]->cpu_data();
+  Dtype* x_norm = buffer_blob_.mutable_cpu_diff();
 
   // Propagate layer to parameters
   // gradient w.r.t. scale
-  caffe_mul(buffer_blob_.count(), x_norm_.cpu_data(),
+  // caffe_mul(buffer_blob_.count(), x_norm_.cpu_data(),
+  //     top_diff, buffer_blob_.mutable_cpu_data());
+  caffe_mul(buffer_blob_.count(), x_norm,
       top_diff, buffer_blob_.mutable_cpu_data());
   // EX across spatial
   caffe_cpu_gemv<Dtype>(CblasNoTrans, N_ * C_,
@@ -272,7 +282,9 @@ void BNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       buffer_blob_.mutable_cpu_data());
 
   // use new top diff for computation
-  caffe_mul(buffer_blob_.count(),  x_norm_.cpu_data(),
+  // caffe_mul(buffer_blob_.count(),  x_norm_.cpu_data(),
+  //     buffer_blob_.cpu_data(), bottom_diff);
+  caffe_mul(buffer_blob_.count(),  x_norm,
       buffer_blob_.cpu_data(), bottom_diff);
   // EX across spatial
   caffe_cpu_gemv<Dtype>(CblasNoTrans, N_ * C_, H_ * W_,
@@ -296,8 +308,10 @@ void BNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       spatial_sum_multiplier_.cpu_data(), Dtype(0),
       bottom_diff);
 
+  // caffe_mul(buffer_blob_.count(),
+  //     x_norm_.cpu_data(), bottom_diff, bottom_diff);
   caffe_mul(buffer_blob_.count(),
-      x_norm_.cpu_data(), bottom_diff, bottom_diff);
+      x_norm, bottom_diff, bottom_diff);
 
   // EX across spatial
   caffe_cpu_gemv<Dtype>(CblasNoTrans, N_ * C_,

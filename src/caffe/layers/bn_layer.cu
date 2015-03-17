@@ -79,7 +79,10 @@ void BNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   caffe_gpu_div(buffer_blob_.count(), top_data, buffer_data, top_data);
 
   // Saving x_norm
-  caffe_copy((*top)[0]->count(), const_top_data, x_norm_.mutable_gpu_data());
+  // caffe_copy((*top)[0]->count(), const_top_data, x_norm_.mutable_gpu_data());
+  Dtype* x_norm = buffer_blob_.mutable_gpu_diff();
+  caffe_copy((*top)[0]->count(), const_top_data, x_norm);
+
 
   // scale
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, N_, C_, 1, Dtype(1),
@@ -116,10 +119,13 @@ void BNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   Dtype* spatial_mean_data = spatial_mean_.mutable_gpu_data();
   Dtype* buffer_data = buffer_blob_.mutable_gpu_data();
   const Dtype* const_buffer_data = buffer_blob_.gpu_data();
+  Dtype* x_norm = buffer_blob_.mutable_gpu_diff();
 
   // Propage to layer params
   // gradient w.r.t. scale
-  caffe_gpu_mul(buffer_blob_.count(), x_norm_.gpu_data(),
+  // caffe_gpu_mul(buffer_blob_.count(), x_norm_.gpu_data(),
+  //     top_diff, buffer_blob_.mutable_gpu_data());
+  caffe_gpu_mul(buffer_blob_.count(), x_norm,
       top_diff, buffer_blob_.mutable_gpu_data());
   // EX across spatial
   caffe_gpu_gemv<Dtype>(CblasNoTrans, N_ * C_, H_ * W_, Dtype(1),
@@ -156,7 +162,9 @@ void BNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       buffer_blob_.mutable_gpu_data());
 
   // use new top diff for computation
-  caffe_gpu_mul(buffer_blob_.count(), x_norm_.gpu_data(),
+  // caffe_gpu_mul(buffer_blob_.count(), x_norm_.gpu_data(),
+  //     buffer_data, bottom_diff);
+  caffe_gpu_mul(buffer_blob_.count(), x_norm,
       buffer_data, bottom_diff);
   // EX across spatial
   caffe_gpu_gemv<Dtype>(CblasNoTrans, N_ * C_, H_ * W_,
@@ -177,7 +185,9 @@ void BNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       spatial_sum_multiplier_.gpu_data(), Dtype(0),
       bottom_diff);
 
-  caffe_gpu_mul(buffer_blob_.count(), x_norm_.gpu_data(),
+  // caffe_gpu_mul(buffer_blob_.count(), x_norm_.gpu_data(),
+  //     bottom_diff, bottom_diff);
+  caffe_gpu_mul(buffer_blob_.count(), x_norm,
       bottom_diff, bottom_diff);
 
   // EX across spatial

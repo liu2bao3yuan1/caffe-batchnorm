@@ -108,7 +108,7 @@ class BNLayer : public Layer<Dtype> {
     // buffer blob
     Blob<Dtype> buffer_blob_;
 
-    Blob<Dtype> x_norm_;
+    // Blob<Dtype> x_norm_;
     // x_sum_multiplier is used to carry out sum using BLAS
     Blob<Dtype> spatial_sum_multiplier_, batch_sum_multiplier_;
 
