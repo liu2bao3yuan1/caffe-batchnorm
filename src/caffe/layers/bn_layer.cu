@@ -34,11 +34,15 @@ void BNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       batch_sum_multiplier_.gpu_data(), Dtype(0),
       batch_mean_.mutable_gpu_data());
   if (Caffe::phase() == Caffe::TRAIN) {
-    caffe_gpu_axpby(batch_mean_.count(), 1 - decay_exma,
-        batch_mean_.gpu_data(), decay_exma,
-        batch_mean_exma_.mutable_gpu_data());
-  }
-  else if (Caffe::phase() == Caffe::TEST) {
+    if (is_first_exma) {
+      caffe_gpu_axpby(batch_mean_.count(), (Dtype)1 - decay_exma,
+          batch_mean_.gpu_data(), (Dtype)0,
+          batch_mean_exma_.mutable_gpu_data());
+    } else {
+      caffe_gpu_axpby(batch_mean_.count(), (Dtype)1 - decay_exma,
+          batch_mean_.gpu_data(), decay_exma,
+          batch_mean_exma_.mutable_gpu_data());
+    }
   }
 
   // E(X^2) across spatial
@@ -57,11 +61,23 @@ void BNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   caffe_gpu_sub(batch_mean_.count(), batch_variance_.gpu_data(),
       buffer_data, batch_variance_.mutable_gpu_data());  // variance
   if (Caffe::phase() == Caffe::TRAIN) {
-    caffe_gpu_axpby(batch_variance_.count(), 1 - decay_exma,
+    if (is_first_exma) {
+      caffe_gpu_axpby(batch_variance_.count(), (Dtype)1 - decay_exma,
+          batch_variance_.gpu_data(), (Dtype)0,
+          batch_variance_exma_.mutable_gpu_data());
+    } else {
+    caffe_gpu_axpby(batch_variance_.count(), (Dtype)1 - decay_exma,
         batch_variance_.gpu_data(), decay_exma,
         batch_variance_exma_.mutable_gpu_data());
+    }
   }
   else if (Caffe::phase() == Caffe::TEST) {
+    caffe_copy(batch_variance_.count(), batch_variance_exma_.gpu_data(), batch_variance_.mutable_gpu_data());
+  }
+  if (Caffe::phase() == Caffe::TRAIN) {
+    if (is_first_exma) {
+      is_first_exma = false;
+    }
   }
 
   // do mean and variance normalization

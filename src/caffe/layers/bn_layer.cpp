@@ -26,6 +26,7 @@ void BNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   W_ = bottom[0]->width();
   var_eps_ = 1e-9;
   decay_exma = this->layer_param_.bn_param().decay_exma();
+  is_first_exma = true;
 
   // mean
   spatial_mean_.Reshape(N_, C_, 1, 1);
@@ -145,11 +146,18 @@ void BNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       batch_sum_multiplier_.cpu_data(), Dtype(0),
       batch_mean_.mutable_cpu_data());
   if (Caffe::phase() == Caffe::TRAIN) {
-    caffe_cpu_axpby(batch_mean_.count(), 1 - decay_exma,
-        batch_mean_.cpu_data(), decay_exma,
-        batch_mean_exma_.mutable_cpu_data());
+    if (is_first_exma) {
+      caffe_cpu_axpby(batch_mean_.count(), (Dtype)1 - decay_exma,
+          batch_mean_.cpu_data(), (Dtype)0,
+          batch_mean_exma_.mutable_cpu_data());
+    } else {
+      caffe_cpu_axpby(batch_mean_.count(), (Dtype)1 - decay_exma,
+          batch_mean_.cpu_data(), decay_exma,
+          batch_mean_exma_.mutable_cpu_data());
+    }
   }
   else if (Caffe::phase() == Caffe::TEST) {
+    caffe_copy(batch_mean_.count(), batch_mean_exma_.cpu_data(), batch_mean_.mutable_cpu_data());
   }
 
   // E(X^2) across spatial
@@ -169,11 +177,23 @@ void BNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       buffer_blob_.cpu_data(),
       batch_variance_.mutable_cpu_data());  // variance
   if (Caffe::phase() == Caffe::TRAIN) {
-    caffe_cpu_axpby(batch_variance_.count(), 1 - decay_exma,
+    if (is_first_exma) {
+      caffe_cpu_axpby(batch_variance_.count(), (Dtype)1 - decay_exma,
+          batch_variance_.cpu_data(), (Dtype)0,
+          batch_variance_exma_.mutable_cpu_data());
+    } else {
+    caffe_cpu_axpby(batch_variance_.count(), (Dtype)1 - decay_exma,
         batch_variance_.cpu_data(), decay_exma,
         batch_variance_exma_.mutable_cpu_data());
+    }
   }
   else if (Caffe::phase() == Caffe::TEST) {
+    caffe_copy(batch_variance_.count(), batch_variance_exma_.cpu_data(), batch_variance_.mutable_cpu_data());
+  }
+  if (Caffe::phase() == Caffe::TRAIN) {
+    if (is_first_exma) {
+      is_first_exma = false;
+    }
   }
 
   // do mean and variance normalization
