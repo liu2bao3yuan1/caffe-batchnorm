@@ -65,6 +65,8 @@ layers {
   top: "conv1"
   blobs_lr: 1
   blobs_lr: 1
+  blobs_lr: 0
+  blobs_lr: 0
   bn_param {
     scale_filler {
       type: "constant"
@@ -135,6 +137,8 @@ layers {
   top: "conv2"
   blobs_lr: 1
   blobs_lr: 1
+  blobs_lr: 0
+  blobs_lr: 0
   bn_param {
     scale_filler {
       type: "constant"
@@ -204,6 +208,8 @@ layers {
   top: "conv3"
   blobs_lr: 1
   blobs_lr: 1
+  blobs_lr: 0
+  blobs_lr: 0
   bn_param {
     scale_filler {
       type: "constant"
@@ -252,6 +258,8 @@ layers {
   top: "conv4"
   blobs_lr: 1
   blobs_lr: 1
+  blobs_lr: 0
+  blobs_lr: 0
   bn_param {
     scale_filler {
       type: "constant"
@@ -300,6 +308,8 @@ layers {
   top: "conv5"
   blobs_lr: 1
   blobs_lr: 1
+  blobs_lr: 0
+  blobs_lr: 0
   bn_param {
     scale_filler {
       type: "constant"

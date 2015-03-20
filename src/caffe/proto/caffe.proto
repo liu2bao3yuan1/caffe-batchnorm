@@ -385,7 +385,7 @@ message ArgMaxParameter {
 message BNParameter {
   optional FillerParameter scale_filler = 1; // The filler for the scale
   optional FillerParameter shift_filler = 2; // The filler for the shift
-  optional float decay_exma = 3 [default = 0.99]; // exponentially weighted moving average
+  optional float decay_exma = 3 [default = 0]; // exponentially weighted moving average
 }
 
 // Message that stores parameters used by ReCULayer

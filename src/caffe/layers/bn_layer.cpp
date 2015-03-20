@@ -26,16 +26,15 @@ void BNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   W_ = bottom[0]->width();
   var_eps_ = 1e-9;
   decay_exma = this->layer_param_.bn_param().decay_exma();
+  LOG(INFO) << "decay_exma = " << decay_exma;
   is_first_exma = true;
 
   // mean
   spatial_mean_.Reshape(N_, C_, 1, 1);
   batch_mean_.Reshape(1, C_, 1, 1);
-  batch_mean_exma_.Reshape(1, C_, 1, 1);
   // variance
   spatial_variance_.Reshape(N_, C_, 1, 1);
   batch_variance_.Reshape(1, C_, 1, 1);
-  batch_variance_exma_.Reshape(1, C_, 1, 1);
   // buffer blob
   buffer_blob_.Reshape(N_, C_, H_, W_);
 
@@ -59,7 +58,7 @@ void BNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
-    this->blobs_.resize(2);
+    this->blobs_.resize(4);
 
     // fill scale with scale_filler
     this->blobs_[0].reset(new Blob<Dtype>(1, C_, 1, 1));
@@ -72,6 +71,8 @@ void BNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     shared_ptr<Filler<Dtype> > shift_filler(GetFiller<Dtype>(
           this->layer_param_.bn_param().shift_filler()));
     shift_filler->Fill(this->blobs_[1].get());
+    this->blobs_[2].reset(new Blob<Dtype>(1, C_, 1, 1)); // batch_mean_exma;
+    this->blobs_[3].reset(new Blob<Dtype>(1, C_, 1, 1)); // batch_variance_exma;
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
@@ -94,11 +95,9 @@ void BNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // mean
   spatial_mean_.Reshape(N_, C_, 1, 1);
   batch_mean_.Reshape(1, C_, 1, 1);
-  batch_mean_exma_.Reshape(1, C_, 1, 1);
   // variance
   spatial_variance_.Reshape(N_, C_, 1, 1);
   batch_variance_.Reshape(1, C_, 1, 1);
-  batch_variance_exma_.Reshape(1, C_, 1, 1);
   // buffer blod
   buffer_blob_.Reshape(N_, C_, H_, W_);
 
@@ -129,6 +128,8 @@ void BNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   const Dtype* scale_data = this->blobs_[0]->cpu_data();
   const Dtype* shift_data = this->blobs_[1]->cpu_data();
+  Dtype* batch_mean_exma = this->blobs_[2]->mutable_cpu_data();
+  Dtype* batch_variance_exma = this->blobs_[3]->mutable_cpu_data();
 
   // put the squares of bottom into buffer_blob_
   caffe_powx(bottom[0]->count(), bottom_data, Dtype(2),
@@ -149,15 +150,15 @@ void BNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (is_first_exma) {
       caffe_cpu_axpby(batch_mean_.count(), (Dtype)1 - decay_exma,
           batch_mean_.cpu_data(), (Dtype)0,
-          batch_mean_exma_.mutable_cpu_data());
+          batch_mean_exma);
     } else {
       caffe_cpu_axpby(batch_mean_.count(), (Dtype)1 - decay_exma,
           batch_mean_.cpu_data(), decay_exma,
-          batch_mean_exma_.mutable_cpu_data());
+          batch_mean_exma);
     }
   }
   else if (Caffe::phase() == Caffe::TEST) {
-    caffe_copy(batch_mean_.count(), batch_mean_exma_.cpu_data(), batch_mean_.mutable_cpu_data());
+    caffe_copy(batch_mean_.count(), batch_mean_exma, batch_mean_.mutable_cpu_data());
   }
 
   // E(X^2) across spatial
@@ -180,15 +181,15 @@ void BNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     if (is_first_exma) {
       caffe_cpu_axpby(batch_variance_.count(), (Dtype)1 - decay_exma,
           batch_variance_.cpu_data(), (Dtype)0,
-          batch_variance_exma_.mutable_cpu_data());
+          batch_variance_exma);
     } else {
     caffe_cpu_axpby(batch_variance_.count(), (Dtype)1 - decay_exma,
         batch_variance_.cpu_data(), decay_exma,
-        batch_variance_exma_.mutable_cpu_data());
+        batch_variance_exma);
     }
   }
   else if (Caffe::phase() == Caffe::TEST) {
-    caffe_copy(batch_variance_.count(), batch_variance_exma_.cpu_data(), batch_variance_.mutable_cpu_data());
+    caffe_copy(batch_variance_.count(), batch_variance_exma, batch_variance_.mutable_cpu_data());
   }
   if (Caffe::phase() == Caffe::TRAIN) {
     if (is_first_exma) {

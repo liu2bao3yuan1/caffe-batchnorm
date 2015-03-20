@@ -16,6 +16,8 @@ void BNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* spatial_mean_data = spatial_mean_.mutable_gpu_data();
   Dtype* buffer_data = buffer_blob_.mutable_gpu_data();
   const Dtype* const_buffer_data = buffer_blob_.gpu_data();
+  Dtype* batch_mean_exma = this->blobs_[2]->mutable_gpu_data();
+  Dtype* batch_variance_exma = this->blobs_[3]->mutable_gpu_data();
 
 
   // put the squares of bottom into buffer_blob_
@@ -37,15 +39,19 @@ void BNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (is_first_exma) {
       caffe_gpu_axpby(batch_mean_.count(), (Dtype)1 - decay_exma,
           batch_mean_.gpu_data(), (Dtype)0,
-          batch_mean_exma_.mutable_gpu_data());
+          batch_mean_exma);
     } else {
       caffe_gpu_axpby(batch_mean_.count(), (Dtype)1 - decay_exma,
           batch_mean_.gpu_data(), decay_exma,
-          batch_mean_exma_.mutable_gpu_data());
+          batch_mean_exma);
     }
   }
-  else if (Caffe::phase() == Caffe::TEST) {
-    caffe_copy(batch_mean_.count(), batch_mean_exma_.gpu_data(), batch_mean_.mutable_gpu_data());
+  else {
+    caffe_gpu_axpby(batch_mean_.count(), (Dtype)1,
+        batch_mean_exma, (Dtype)0,
+        batch_mean_.mutable_gpu_data());
+    // LOG(INFO) << "batch_mean_exma_ to batch_mean_";
+    // caffe_copy(batch_mean_.count(), batch_mean_exma, batch_mean_.mutable_gpu_data());
   }
 
   // E(X^2) across spatial
@@ -67,15 +73,18 @@ void BNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     if (is_first_exma) {
       caffe_gpu_axpby(batch_variance_.count(), (Dtype)1 - decay_exma,
           batch_variance_.gpu_data(), (Dtype)0,
-          batch_variance_exma_.mutable_gpu_data());
+          batch_variance_exma);
     } else {
     caffe_gpu_axpby(batch_variance_.count(), (Dtype)1 - decay_exma,
         batch_variance_.gpu_data(), decay_exma,
-        batch_variance_exma_.mutable_gpu_data());
+        batch_variance_exma);
     }
   }
-  else if (Caffe::phase() == Caffe::TEST) {
-    caffe_copy(batch_variance_.count(), batch_variance_exma_.gpu_data(), batch_variance_.mutable_gpu_data());
+  else {
+    caffe_gpu_axpby(batch_mean_.count(), (Dtype)1,
+        batch_variance_exma, (Dtype)0,
+        batch_variance_.mutable_gpu_data());
+    // caffe_copy(batch_variance_.count(), batch_variance_exma, batch_variance_.mutable_gpu_data());
   }
   if (Caffe::phase() == Caffe::TRAIN) {
     if (is_first_exma) {

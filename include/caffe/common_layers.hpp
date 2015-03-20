@@ -105,7 +105,6 @@ class BNLayer : public Layer<Dtype> {
     Blob<Dtype> spatial_mean_, spatial_variance_;
     // batch mean & variance
     Blob<Dtype> batch_mean_, batch_variance_;
-    Blob<Dtype> batch_mean_exma_, batch_variance_exma_; // exponentially weighted moving average
     Dtype decay_exma;
     bool is_first_exma;
     // buffer blob
