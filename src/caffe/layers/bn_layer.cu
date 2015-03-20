@@ -44,6 +44,9 @@ void BNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           batch_mean_exma_.mutable_gpu_data());
     }
   }
+  else if (Caffe::phase() == Caffe::TEST) {
+    caffe_copy(batch_mean_.count(), batch_mean_exma_.gpu_data(), batch_mean_.mutable_gpu_data());
+  }
 
   // E(X^2) across spatial
   caffe_gpu_gemv<Dtype>(CblasNoTrans, N_ * C_, H_ * W_,
