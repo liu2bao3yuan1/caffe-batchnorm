@@ -33,6 +33,13 @@ void BNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       spatial_mean_.gpu_data(),
       batch_sum_multiplier_.gpu_data(), Dtype(0),
       batch_mean_.mutable_gpu_data());
+  if (Caffe::phase() == Caffe::TRAIN) {
+    caffe_gpu_axpby(batch_mean_.count(), 1 - decay_exma,
+        batch_mean_.gpu_data(), decay_exma,
+        batch_mean_exma_.mutable_gpu_data());
+  }
+  else if (Caffe::phase() == Caffe::TEST) {
+  }
 
   // E(X^2) across spatial
   caffe_gpu_gemv<Dtype>(CblasNoTrans, N_ * C_, H_ * W_,
@@ -49,6 +56,13 @@ void BNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       Dtype(2), buffer_blob_.mutable_gpu_data());  // (EX)^2
   caffe_gpu_sub(batch_mean_.count(), batch_variance_.gpu_data(),
       buffer_data, batch_variance_.mutable_gpu_data());  // variance
+  if (Caffe::phase() == Caffe::TRAIN) {
+    caffe_gpu_axpby(batch_variance_.count(), 1 - decay_exma,
+        batch_variance_.gpu_data(), decay_exma,
+        batch_variance_exma_.mutable_gpu_data());
+  }
+  else if (Caffe::phase() == Caffe::TEST) {
+  }
 
   // do mean and variance normalization
   // subtract mean
