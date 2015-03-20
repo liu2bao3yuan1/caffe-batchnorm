@@ -25,13 +25,16 @@ void BNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   H_ = bottom[0]->height();
   W_ = bottom[0]->width();
   var_eps_ = 1e-9;
+  decay_exma = this->layer_param_.bn_param().decay_exma();
 
   // mean
   spatial_mean_.Reshape(N_, C_, 1, 1);
   batch_mean_.Reshape(1, C_, 1, 1);
+  batch_mean_exma_.Reshape(1, C_, 1, 1);
   // variance
   spatial_variance_.Reshape(N_, C_, 1, 1);
   batch_variance_.Reshape(1, C_, 1, 1);
+  batch_variance_exma_.Reshape(1, C_, 1, 1);
   // buffer blob
   buffer_blob_.Reshape(N_, C_, H_, W_);
 
@@ -90,9 +93,11 @@ void BNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // mean
   spatial_mean_.Reshape(N_, C_, 1, 1);
   batch_mean_.Reshape(1, C_, 1, 1);
+  batch_mean_exma_.Reshape(1, C_, 1, 1);
   // variance
   spatial_variance_.Reshape(N_, C_, 1, 1);
   batch_variance_.Reshape(1, C_, 1, 1);
+  batch_variance_exma_.Reshape(1, C_, 1, 1);
   // buffer blod
   buffer_blob_.Reshape(N_, C_, H_, W_);
 
@@ -139,6 +144,13 @@ void BNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       spatial_mean_.cpu_data(),
       batch_sum_multiplier_.cpu_data(), Dtype(0),
       batch_mean_.mutable_cpu_data());
+  if (Caffe::phase() == Caffe::TRAIN) {
+    caffe_cpu_axpby(batch_mean_.count(), 1 - decay_exma,
+        batch_mean_.cpu_data(), decay_exma,
+        batch_mean_exma_.mutable_cpu_data());
+  }
+  else if (Caffe::phase() == Caffe::TEST) {
+  }
 
   // E(X^2) across spatial
   caffe_cpu_gemv<Dtype>(CblasNoTrans, N_ * C_, H_ * W_,
@@ -156,6 +168,13 @@ void BNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   caffe_sub(batch_mean_.count(), batch_variance_.cpu_data(),
       buffer_blob_.cpu_data(),
       batch_variance_.mutable_cpu_data());  // variance
+  if (Caffe::phase() == Caffe::TRAIN) {
+    caffe_cpu_axpby(batch_variance_.count(), 1 - decay_exma,
+        batch_variance_.cpu_data(), decay_exma,
+        batch_variance_exma_.mutable_cpu_data());
+  }
+  else if (Caffe::phase() == Caffe::TEST) {
+  }
 
   // do mean and variance normalization
   // subtract mean
