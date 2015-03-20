@@ -8,7 +8,7 @@ layers {
     # source: "examples/imagenet/ilsvrc12_train_lmdb"
     source: "/home/bryant/DATA/ILSVRC/2012/lmdb/ilsvrc12_train_lmdb"
     backend: LMDB
-    batch_size: 128
+    batch_size: 256
   }
   transform_param {
     crop_size: 227
@@ -62,7 +62,7 @@ layers {
   name: "bn1"
   type: BN
   bottom: "conv1"
-  top: "bn1"
+  top: "conv1"
   blobs_lr: 1
   blobs_lr: 1
   bn_param {
@@ -77,15 +77,15 @@ layers {
   }
 }
 layers {
-name: "relu1"
+name: "recu1"
   type: RECU
-  bottom: "bn1"
-  top: "bn1"
+  bottom: "conv1"
+  top: "conv1"
 }
 layers {
   name: "pool1"
   type: POOLING
-  bottom: "bn1"
+  bottom: "conv1"
   top: "pool1"
   pooling_param {
     pool: MAX
@@ -132,7 +132,7 @@ layers {
   name: "bn2"
   type: BN
   bottom: "conv2"
-  top: "bn2"
+  top: "conv2"
   blobs_lr: 1
   blobs_lr: 1
   bn_param {
@@ -147,15 +147,15 @@ layers {
   }
 }
 layers {
-  name: "relu2"
+  name: "recu2"
   type: RECU
-  bottom: "bn2"
-  top: "bn2"
+  bottom: "conv2"
+  top: "conv2"
 }
 layers {
   name: "pool2"
   type: POOLING
-  bottom: "bn2"
+  bottom: "conv2"
   top: "pool2"
   pooling_param {
     pool: MAX
@@ -201,7 +201,7 @@ layers {
   name: "bn3"
   type: BN
   bottom: "conv3"
-  top: "bn3"
+  top: "conv3"
   blobs_lr: 1
   blobs_lr: 1
   bn_param {
@@ -216,15 +216,15 @@ layers {
   }
 }
 layers {
-  name: "relu3"
+  name: "recu3"
   type: RECU
-  bottom: "bn3"
-  top: "bn3"
+  bottom: "conv3"
+  top: "conv3"
 }
 layers {
   name: "conv4"
   type: CONVOLUTION
-  bottom: "bn3"
+  bottom: "conv3"
   top: "conv4"
   blobs_lr: 1
   blobs_lr: 2
@@ -249,7 +249,7 @@ layers {
   name: "bn4"
   type: BN
   bottom: "conv4"
-  top: "bn4"
+  top: "conv4"
   blobs_lr: 1
   blobs_lr: 1
   bn_param {
@@ -264,15 +264,15 @@ layers {
   }
 }
 layers {
-  name: "relu4"
+  name: "recu4"
   type: RECU
-  bottom: "bn4"
-  top: "bn4"
+  bottom: "conv4"
+  top: "conv4"
 }
 layers {
   name: "conv5"
   type: CONVOLUTION
-  bottom: "bn4"
+  bottom: "conv4"
   top: "conv5"
   blobs_lr: 1
   blobs_lr: 2
@@ -297,7 +297,7 @@ layers {
   name: "bn5"
   type: BN
   bottom: "conv5"
-  top: "bn5"
+  top: "conv5"
   blobs_lr: 1
   blobs_lr: 1
   bn_param {
@@ -312,15 +312,15 @@ layers {
   }
 }
 layers {
-  name: "relu5"
+  name: "recu5"
   type: RECU
-  bottom: "bn5"
-  top: "bn5"
+  bottom: "conv5"
+  top: "conv5"
 }
 layers {
   name: "pool5"
   type: POOLING
-  bottom: "bn5"
+  bottom: "conv5"
   top: "pool5"
   pooling_param {
     pool: MAX
@@ -350,8 +350,8 @@ layers {
   }
 }
 layers {
-  name: "relu6"
-  type: RELU
+  name: "recu6"
+  type: RECU
   bottom: "fc6"
   top: "fc6"
 }
@@ -386,8 +386,8 @@ layers {
   }
 }
 layers {
-  name: "relu7"
-  type: RELU
+  name: "recu7"
+  type: RECU
   bottom: "fc7"
   top: "fc7"
 }

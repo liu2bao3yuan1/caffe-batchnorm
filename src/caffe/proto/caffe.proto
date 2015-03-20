@@ -392,7 +392,7 @@ message ReCUParameter {
   optional float negative_slope = 1 [default = 0];
   optional float alpha = 2 [default = 1];
   optional float beta = 3 [default = 0.2];
-  optional float s = 4 [default = 128];
+  optional float s = 4 [default = 32];
 }
 
 // Message that stores parameters used by ConcatLayer
