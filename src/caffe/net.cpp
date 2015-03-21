@@ -742,6 +742,17 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       ptr->CopyFromConvLayer(source_layer);
       continue;
     } 
+    // temporary solution for incompatible batch norm layer
+    if (layers_[target_layer_id]->layer_param().type() == LayerParameter_LayerType_BN) {
+      vector<shared_ptr<Blob<Dtype> > >& target_blobs =
+        layers_[target_layer_id]->blobs();
+      if (target_blobs.size() == 4 && source_layer.blobs_size() == 2) {
+        for (int j = 0; j < source_layer.blobs_size(); ++j) {
+          target_blobs[j]->FromProto(source_layer.blobs(j));
+        }
+        continue;
+      }
+    }
     vector<shared_ptr<Blob<Dtype> > >& target_blobs =
       layers_[target_layer_id]->blobs();
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
