@@ -76,6 +76,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
+    decay_exma: 0.9
   }
 }
 layers {
@@ -148,6 +149,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
+    decay_exma: 0.9
   }
 }
 layers {
@@ -219,6 +221,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
+    decay_exma: 0.9
   }
 }
 layers {
@@ -269,6 +272,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
+    decay_exma: 0.9
   }
 }
 layers {
@@ -319,6 +323,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
+    decay_exma: 0.9
   }
 }
 layers {
