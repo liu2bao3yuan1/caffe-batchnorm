@@ -67,6 +67,10 @@ layers {
   blobs_lr: 1
   blobs_lr: 0
   blobs_lr: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
   bn_param {
     scale_filler {
       type: "constant"
@@ -76,7 +80,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
-    decay_exma: 0.9
+    decay_exma: 0
   }
 }
 layers {
@@ -140,6 +144,10 @@ layers {
   blobs_lr: 1
   blobs_lr: 0
   blobs_lr: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
   bn_param {
     scale_filler {
       type: "constant"
@@ -149,7 +157,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
-    decay_exma: 0.9
+    decay_exma: 0
   }
 }
 layers {
@@ -212,6 +220,10 @@ layers {
   blobs_lr: 1
   blobs_lr: 0
   blobs_lr: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
   bn_param {
     scale_filler {
       type: "constant"
@@ -221,7 +233,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
-    decay_exma: 0.9
+    decay_exma: 0
   }
 }
 layers {
@@ -263,6 +275,10 @@ layers {
   blobs_lr: 1
   blobs_lr: 0
   blobs_lr: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
   bn_param {
     scale_filler {
       type: "constant"
@@ -272,7 +288,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
-    decay_exma: 0.9
+    decay_exma: 0
   }
 }
 layers {
@@ -314,6 +330,10 @@ layers {
   blobs_lr: 1
   blobs_lr: 0
   blobs_lr: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
+  weight_decay: 0
   bn_param {
     scale_filler {
       type: "constant"
@@ -323,7 +343,7 @@ layers {
       type: "constant"
       value: 0.001
     } 
-    decay_exma: 0.9
+    decay_exma: 0
   }
 }
 layers {
